@@ -113,13 +113,13 @@ const wilayaPostal = wilayaCode ? `${wilayaCode}000` : undefined;
 
       <main className="py-8 px-4">
         <div className="container mx-auto max-w-md">
-          <div className={`text-center mb-6 transition-all duration-1000 delay-300 ${isVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}>
+         {/*} <div className={`text-center mb-6 transition-all duration-1000 delay-300 ${isVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}>
             <div className="bg-green-100 border border-green-300 rounded-lg p-4 mb-4">
               <Package className="h-8 w-8 text-green-600 mx-auto mb-2" />
               <h1 className="text-xl font-bold text-green-800 mb-1">Votre Colis est Prêt!</h1>
               <p className="text-green-700 text-sm">Récupérez-le à notre stopdesk</p>
             </div>
-          </div>
+          </div>*/}
 
           <Card className={`mb-6 shadow-xl transition-all duration-1000 delay-500 ${isVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}>
             <CardContent className="p-6">
