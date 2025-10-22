@@ -8,11 +8,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing shortUrl" }, { status: 400 });
     }
 
-    // 1️⃣ Follow the redirect from the short URL
     const response = await fetch(shortUrl, { redirect: "follow" });
     const finalUrl = response.url;
 
-    // 2️⃣ Try to extract coordinates from the final URL
+
     const match = finalUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
 
     if (!match) {
