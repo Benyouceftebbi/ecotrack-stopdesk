@@ -7,7 +7,34 @@ import { Phone, Clock, Package, PhoneCall } from "lucide-react"
 import Image from "next/image"
 import { doc, increment, setDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
-
+export const metadata = {
+  title: "إشعار استلام – DHD مكتب التوصيل",
+  description:
+    "طلبك جاهز للاستلام من مكتب التوصيل DHD. اضغط هنا للاطلاع على التفاصيل ومواعيد العمل.",
+  openGraph: {
+    title: "إشعار استلام – DHD مكتب التوصيل",
+    description:
+      "طلبك جاهز للاستلام من مكتب التوصيل DHD. اضغط هنا للاطلاع على التفاصيل ومواعيد العمل.",
+    url: "https://stopdesk.info",
+    images: [
+      {
+        url: "https://stopdesk.info/images/DHD.png",
+        width: 1200,
+        height: 630,
+        alt: "شعار DHD مكتب التوصيل",
+      },
+    ],
+    type: "website",
+    locale: "ar_AR",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "إشعار استلام – DHD مكتب التوصيل",
+    description:
+      "طلبك جاهز للاستلام من مكتب التوصيل DHD. اضغط هنا للاطلاع على التفاصيل ومواعيد العمل.",
+    images: ["https://stopdesk.info/images/DHD.png"],
+  },
+};
 export default function PickupLocationPage() {
   const [isVisible, setIsVisible] = useState(false)
   let hasTrackedThisLoad = false;
