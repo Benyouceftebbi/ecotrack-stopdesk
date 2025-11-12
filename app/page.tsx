@@ -10,6 +10,7 @@ import { db } from "@/lib/firebase"
 
 export default function PickupLocationPage() {
   const [isVisible, setIsVisible] = useState(false)
+
   let hasTrackedThisLoad = false;
   useEffect(() => {
     setIsVisible(true);
@@ -42,7 +43,7 @@ export default function PickupLocationPage() {
             className={`flex items-center justify-center transition-all duration-1000 ${isVisible ? "translate-y-0 opacity-100" : "-translate-y-5 opacity-0"}`}
           >
             <Image
-              src="/images/DHD.png"
+              src={`/images/DHD.png`}
               alt="EcoTrack Logo"
               width={200}
               height={60}

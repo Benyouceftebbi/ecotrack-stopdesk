@@ -9,4 +9,5 @@ export type EcoStop = {
     adresse?: string | null;
     map?: string | null;
     hub_working_days?: { day: string; openTime: string; closeTime: string }[] | null;
+    company :string| null
   };

@@ -15,8 +15,7 @@ export default function StopdeskPage({ params }: { params: { urlcode: string } }
   const [isVisible, setIsVisible] = useState(false);
   const [stop, setStop] = useState<EcoStop | null>(null);
   const [loading, setLoading] = useState(true);
-  const [mapUrl, setMapUrl] = useState<string | null>(null);
-
+  const [company,setCompany]=useState<string | null>(null)
   useEffect(() => setIsVisible(true), []);
 
   useEffect(() => {
@@ -44,33 +43,8 @@ export default function StopdeskPage({ params }: { params: { urlcode: string } }
 
       if (!alive) return;
       setStop(data);
+      setCompany(data.company)
 
-      // 🔹 Step 2. If there’s a short Google Maps URL, resolve it
-      if (data?.map?.includes("maps.app.goo.gl")) {
-        try {
-          const res = await fetch("/api/resolve-map", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ shortUrl: data.map }),
-          });
-          const r = await res.json();
-          if (r.lat && r.lng) {
-            setMapUrl(`https://www.google.com/maps?q=${r.lat},${r.lng}&output=embed`);
-          } else {
-            setMapUrl(null);
-          }
-        } catch (err) {
-          console.error("Map resolve error", err);
-          setMapUrl(null);
-        }
-      } else if (data?.map) {
-        // fallback for already embed-ready URL
-        const embedUrl = data.map.replace(
-          "https://www.google.com/maps/search/?api=1&query=",
-          "https://www.google.com/maps?q="
-        );
-        setMapUrl(embedUrl);
-      }
 
       setLoading(false);
     })();
@@ -100,13 +74,15 @@ const wilayaName = wilayaCode ? WILAYA_NAMES[wilayaCode] : undefined;
 const wilayaPostal = wilayaCode ? `${wilayaCode}000` : undefined;
   if (loading) return <div className="min-h-screen grid place-items-center">Chargement…</div>;
   if (!stop)   return <div className="min-h-screen grid place-items-center">Stopdesk introuvable: {urlcode}</div>;
-
+  const imgSrc = company
+  ? `/images/${company}.png`
+  : '/images/ecotrack-logo.png';
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white">
       <header className="bg-white shadow-lg">
         <div className="container mx-auto px-4 py-4">
           <div className={`flex justify-center transition-all duration-1000 ${isVisible ? "translate-y-0 opacity-100" : "-translate-y-5 opacity-0"}`}>
-            <Image src="/images/ecotrack-logo.png" alt="EcoTrack Logo" width={200} height={60} className="h-10 w-auto" />
+            <Image src={imgSrc} alt="EcoTrack Logo" width={200} height={60} className="h-10 w-auto" />
           </div>
         </div>
       </header>
@@ -174,9 +150,9 @@ const wilayaPostal = wilayaCode ? `${wilayaCode}000` : undefined;
             <CardContent className="p-0">
               <div className="relative">
                 <div className="w-full h-64 bg-gray-200 rounded-t-lg overflow-hidden">
-                {mapUrl ? (
+                {stop.iframeMap ? (
         <iframe
-          src={mapUrl}
+          src={stop.iframeMap}
           width="100%"
           height="256"
           style={{ border: 0 }}
@@ -213,7 +189,7 @@ const wilayaPostal = wilayaCode ? `${wilayaCode}000` : undefined;
       <footer className="bg-blue-900 text-white py-6 mt-8">
         <div className="container mx-auto px-4 text-center">
           <div className="flex justify-center items-center mb-2">
-            <Image src="/images/ecotrack-logo.png" alt="EcoTrack Logo" width={120} height={36} className="h-6 w-auto filter brightness-0 invert" />
+            <Image src={imgSrc} alt="EcoTrack Logo" width={120} height={36} className="h-6 w-auto filter brightness-0 invert" />
           </div>
         </div>
       </footer>
