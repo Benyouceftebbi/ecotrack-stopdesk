@@ -9,6 +9,57 @@ import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, Phone, Clock, Package, Navigation } from "lucide-react";
 import Image from "next/image";
 import { WILAYA_NAMES } from "@/lib/wilayas";
+
+type Language = "fr" | "ar";
+
+const dayTranslations: Record<string, { fr: string; ar: string }> = {
+  Lundi: { fr: "Lundi", ar: "الإثنين" },
+  Mardi: { fr: "Mardi", ar: "الثلاثاء" },
+  Mercredi: { fr: "Mercredi", ar: "الأربعاء" },
+  Jeudi: { fr: "Jeudi", ar: "الخميس" },
+  Vendredi: { fr: "Vendredi", ar: "الجمعة" },
+  Samedi: { fr: "Samedi", ar: "السبت" },
+  Dimanche: { fr: "Dimanche", ar: "الأحد" },
+};
+
+const translateDay = (day: string, lang: Language): string => {
+  const normalized = day.charAt(0).toUpperCase() + day.slice(1).toLowerCase();
+  return dayTranslations[normalized]?.[lang] || day;
+};
+
+const translations = {
+  fr: {
+    loading: "Chargement…",
+    notFound: "Stopdesk introuvable:",
+    pickupPoint: "Point de Retrait",
+    addressUnavailable: "Adresse indisponible",
+    country: "Algérie",
+    contactStopdesk: "Contactez le Stopdesk",
+    notAvailable: "Non disponible",
+    openingHours: "Horaires d'Ouverture",
+    notProvided: "Non communiqué",
+    openInGoogleMaps: "Ouvrir dans Google Maps",
+    pickupInstructions: "Instructions de Retrait",
+    instruction1: "Présentez une pièce d'identité",
+    instruction2: "Montrez ce SMS ou votre numéro de suivi",
+  },
+  ar: {
+    loading: "جاري التحميل…",
+    notFound: "نقطة التوقف غير موجودة:",
+    pickupPoint: "نقطة الاستلام",
+    addressUnavailable: "العنوان غير متوفر",
+    country: "الجزائر",
+    contactStopdesk: "اتصل بنقطة التوقف",
+    notAvailable: "غير متوفر",
+    openingHours: "ساعات العمل",
+    notProvided: "غير محدد",
+    openInGoogleMaps: "فتح في خرائط جوجل",
+    pickupInstructions: "تعليمات الاستلام",
+    instruction1: "قدّم بطاقة هوية",
+    instruction2: "أظهر هذه الرسالة أو رقم التتبع الخاص بك",
+  },
+};
+
 type StopdeskTheme = {
   bgGradient: string;
   primaryText: string;
@@ -78,7 +129,11 @@ export default function StopdeskPage({ params }: { params: { urlcode: string } }
   const [isVisible, setIsVisible] = useState(false);
   const [stop, setStop] = useState<EcoStop | null>(null);
   const [loading, setLoading] = useState(true);
-  const [company,setCompany]=useState<string | null>(null)
+  const [company, setCompany] = useState<string | null>(null);
+  const [lang, setLang] = useState<Language>("fr");
+
+  const t = translations[lang];
+  const isRTL = lang === "ar";
   useEffect(() => setIsVisible(true), []);
 
   useEffect(() => {
@@ -106,8 +161,14 @@ export default function StopdeskPage({ params }: { params: { urlcode: string } }
 
       if (!alive) return;
       setStop(data);
-      setCompany(data.company)
-
+      setCompany(data?.company ?? null);
+      
+      // Set language based on doc.data.lng
+      if (data?.lng === "ar") {
+        setLang("ar");
+      } else {
+        setLang("fr");
+      }
 
       setLoading(false);
     })();
@@ -137,17 +198,26 @@ export default function StopdeskPage({ params }: { params: { urlcode: string } }
 const wilayaName = wilayaCode ? WILAYA_NAMES[wilayaCode] : undefined;
 // Per your spec: id + "000" (e.g., 16 -> 16000). No left-padding.
 const wilayaPostal = wilayaCode ? `${wilayaCode}000` : undefined;
-  if (loading) return <div className="min-h-screen grid place-items-center">Chargement…</div>;
-  if (!stop)   return <div className="min-h-screen grid place-items-center">Stopdesk introuvable: {urlcode}</div>;
+  if (loading)
+    return <div className="min-h-screen grid place-items-center">{t.loading}</div>;
+  if (!stop)
+    return (
+      <div className="min-h-screen grid place-items-center">
+        {t.notFound} {urlcode}
+      </div>
+    );
   const imgSrc = company
   ? `/images/${company}.png`
   : '/images/ecotrack-logo.png';
   return (
-    <div className={`min-h-screen bg-gradient-to-br ${theme.bgGradient}`}>
+    <div
+      className={`min-h-screen bg-gradient-to-br ${theme.bgGradient}`}
+      dir={isRTL ? "rtl" : "ltr"}
+    >
       <header className="bg-white shadow-lg">
         <div className="container mx-auto px-4 py-4">
           <div className={`flex justify-center transition-all duration-1000 ${isVisible ? "translate-y-0 opacity-100" : "-translate-y-5 opacity-0"}`}>
-            <Image src={imgSrc} alt="EcoTrack Logo" width={200} height={60} className="h-10 w-auto" />
+            <Image src={imgSrc || "/placeholder.svg"} alt="EcoTrack Logo" width={200} height={60} className="h-10 w-auto" />
           </div>
         </div>
       </header>
@@ -160,28 +230,32 @@ const wilayaPostal = wilayaCode ? `${wilayaCode}000` : undefined;
                 <div className={`${theme.buttonBg} p-3 rounded-full inline-block mb-3`}>
                   <MapPin className="h-8 w-8 text-white" />
                 </div>
-                <h2 className={`text-xl font-bold mb-2 ${theme.primaryText}`}>Point de Retrait</h2>
+                <h2 className={`text-xl font-bold mb-2 ${theme.primaryText}`}>
+                  {t.pickupPoint}
+                </h2>
                 <p className={`${theme.mutedText} text-sm mb-4`}>{title}</p>
 
                 <div className="text-center mb-4">
                   <p className={`font-semibold text-lg ${theme.primaryText}`}>
-                    {stop?.adresse || "Adresse indisponible"}
+                    {stop?.adresse || t.addressUnavailable}
                   </p>
                   {wilayaCode && wilayaName && (
                     <p className={theme.mutedText}>
-                      {wilayaPostal} {wilayaName}, Algérie
+                      {wilayaPostal} {wilayaName}, {t.country}
                     </p>
                   )}
                 </div>
               </div>
 
               <div className="grid gap-3 mb-4">
-                <div className={`flex items-center space-x-3 p-3 rounded-lg ${theme.cardAccentBg}`}>
-                  <div className={`${theme.iconCircleBg} p-2 rounded-full`}>
+                <div className={`flex items-center gap-3 p-3 rounded-lg ${theme.cardAccentBg}`}>
+                  <div className={`${theme.iconCircleBg} p-2 rounded-full shrink-0`}>
                     <Phone className="h-4 w-4 text-white" />
                   </div>
                   <div className="flex-1">
-                    <h3 className={`font-semibold text-sm mb-1 ${theme.primaryText}`}>Contactez le Stopdesk</h3>
+                    <h3 className={`font-semibold text-sm mb-1 ${theme.primaryText}`}>
+                        {t.contactStopdesk}
+                      </h3>
                     <div className="space-y-1">
                       {stop?.phone && (
                         <button
@@ -200,29 +274,29 @@ const wilayaPostal = wilayaCode ? `${wilayaCode}000` : undefined;
                         </button>
                       )}
                       {!stop?.phone && !stop?.phone2 && (
-                        <span className="text-gray-500 text-sm">Non disponible</span>
+                        <span className="text-gray-500 text-sm">{t.notAvailable}</span>
                       )}
                     </div>
                   </div>
                 </div>
 
-                <div className={`flex items-center space-x-3 p-3 rounded-lg ${theme.cardAccentBg}`}>
-                  <div className={`${theme.iconCircleBg} p-2 rounded-full`}>
+                <div className={`flex items-center gap-3 p-3 rounded-lg ${theme.cardAccentBg}`}>
+                  <div className={`${theme.iconCircleBg} p-2 rounded-full shrink-0`}>
                     <Clock className="h-4 w-4 text-white" />
                   </div>
                   <div className="flex-1">
                     <h3 className={`font-semibold text-sm mb-1 ${theme.primaryText}`}>
-                      Horaires d&apos;Ouverture
-                    </h3>
+                        {t.openingHours}
+                      </h3>
                     <div className="text-xs text-gray-600 space-y-1">
                       {Array.isArray(stop?.hub_working_days) && stop!.hub_working_days!.length ? (
                         stop!.hub_working_days!.map((h: any, i: number) => (
                           <p key={i}>
-                            {h.day}: {h.openTime} - {h.closeTime}
+                            {translateDay(h.day, lang)}: {h.openTime} - {h.closeTime}
                           </p>
                         ))
                       ) : (
-                        <p className="text-gray-500">Non communiqué</p>
+                        <p className="text-gray-500">{t.notProvided}</p>
                       )}
                     </div>
                   </div>
@@ -256,8 +330,8 @@ const wilayaPostal = wilayaCode ? `${wilayaCode}000` : undefined;
                     size="lg"
                     disabled={!mapUrl1}
                   >
-                    <Navigation className="mr-2 h-5 w-5" />
-                    Ouvrir dans Google Maps
+                    <Navigation className={`h-5 w-5 ${isRTL ? "ml-2" : "mr-2"}`} />
+                    {t.openInGoogleMaps}
                   </Button>
                 </div>
               </div>
@@ -266,10 +340,12 @@ const wilayaPostal = wilayaCode ? `${wilayaCode}000` : undefined;
 
           <Card className={`${theme.cardAccentBg}`}>
             <CardContent className="p-4">
-              <h3 className={`font-semibold mb-2 ${theme.primaryText}`}>Instructions de Retrait</h3>
+              <h3 className={`font-semibold mb-2 ${theme.primaryText}`}>
+                {t.pickupInstructions}
+              </h3>
               <ul className={`text-sm ${theme.secondaryText} space-y-1`}>
-                <li>• Présentez une pièce d&apos;identité</li>
-                <li>• Montrez ce SMS ou votre numéro de suivi</li>
+                <li>• {t.instruction1}</li>
+                <li>• {t.instruction2}</li>
               </ul>
             </CardContent>
           </Card>
@@ -280,7 +356,7 @@ const wilayaPostal = wilayaCode ? `${wilayaCode}000` : undefined;
         <div className="container mx-auto px-4 text-center">
           <div className="flex justify-center items-center mb-2">
             <Image
-              src={imgSrc}
+              src={imgSrc || "/placeholder.svg"}
               alt="EcoTrack Logo"
               width={120}
               height={36}
