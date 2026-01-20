@@ -49,7 +49,7 @@ const translations = {
     pickupPoint: "نقطة الاستلام",
     addressUnavailable: "العنوان غير متوفر",
     country: "الجزائر",
-    contactStopdesk: "اتصل بنقطة التوقف",
+    contactStopdesk:"اتصل بمكتب التوصيل",
     notAvailable: "غير متوفر",
     openingHours: "ساعات العمل",
     notProvided: "غير محدد",
