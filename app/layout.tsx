@@ -1,5 +1,5 @@
 import type React from "react"
-import type { Metadata } from "next"
+
 import { Inter, Roboto } from "next/font/google"
 import "./globals.css"
 
@@ -16,12 +16,7 @@ const roboto = Roboto({
   variable: "--font-roboto",
 })
 
-export const metadata: Metadata = {
-  title: "EcoTrack - Courrier et Colis Express",
-  description: "Service de livraison express rapide et fiable. Courrier et colis express dans toute la région.",
-  keywords: "livraison, express, courrier, colis, transport, EcoTrack",
-    generator: 'v0.app'
-}
+
 
 export default function RootLayout({
   children,

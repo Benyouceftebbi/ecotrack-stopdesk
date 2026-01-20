@@ -9,7 +9,71 @@ import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, Phone, Clock, Package, Navigation } from "lucide-react";
 import Image from "next/image";
 import { WILAYA_NAMES } from "@/lib/wilayas";
+import { Metadata } from "next";
+async function getStopdesk(urlcode: string) {
+  // ✅ 1) Try doc id: EcoStop/{urlcode}
+  const dref = doc(db, "EcoStop", urlcode);
+  const dsnap = await getDoc(dref);
 
+  if (dsnap.exists()) return dsnap.data();
+
+  // ✅ 2) fallback by desk_url_code
+  const q1 = query(
+    collection(db, "EcoStop"),
+    where("desk_url_code", "==", urlcode),
+    limit(1)
+  );
+
+  const q2 = query(
+    collection(db, "EcoStop"),
+    where("desk_url_code", "==", urlcode.toUpperCase()),
+    limit(1)
+  );
+
+  const [r1, r2] = await Promise.all([getDocs(q1), getDocs(q2)]);
+  const m = r1.docs[0] || r2.docs[0];
+
+  return m ? m.data() : null;
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { urlcode: string };
+}): Promise<Metadata> {
+  const urlcode = decodeURIComponent(params.urlcode || "").trim();
+  const stop = await getStopdesk(urlcode);
+
+  const company = stop?.company || "StopDesk";
+  const name = stop?.name || "Point de retrait";
+  const wilaya = stop?.wilaya || "";
+  const commune = stop?.commune || "";
+
+  const title = `${company} - StopDesk`;
+  const description =
+    wilaya || commune
+      ? `${name} - ${commune ? commune + ", " : ""}${wilaya} (Code: ${urlcode})`
+      : `${name} (Code: ${urlcode})`;
+
+  const url = `https://stopdesk.com/${urlcode}`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: "StopDesk",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
+  };
+}
 type Language = "fr" | "ar";
 
 const dayTranslations: Record<string, { fr: string; ar: string }> = {
