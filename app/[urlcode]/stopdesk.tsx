@@ -42,6 +42,7 @@ const translations = {
     pickupInstructions: "Instructions de Retrait",
     instruction1: "Présentez une pièce d'identité",
     instruction2: "Montrez ce SMS ou votre numéro de suivi",
+    instruction3:"Si le colis n’est pas récupéré dans un délai de trois jours, il sera retourné à l’expéditeur."
   },
   ar: {
     loading: "جاري التحميل…",
@@ -57,6 +58,7 @@ const translations = {
     pickupInstructions: "تعليمات الاستلام",
     instruction1: "قدّم بطاقة هوية",
     instruction2: "أظهر هذه الرسالة أو رقم التتبع الخاص بك",
+    instruction3:"إذا لم يتم استلام الطرد خلال ثلاثة أيام، فسيتم إرجاعه إلى المرسل."
   },
 };
 
@@ -346,6 +348,7 @@ const wilayaPostal = wilayaCode ? `${wilayaCode}000` : undefined;
               <ul className={`text-sm ${theme.secondaryText} space-y-1`}>
                 <li>• {t.instruction1}</li>
                 <li>• {t.instruction2}</li>
+                <li>• {t.instruction3}</li>
               </ul>
             </CardContent>
           </Card>
