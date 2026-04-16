@@ -79,7 +79,7 @@ export default function PickupLocationPage() {
               {/* زر اتصال واضح لكبار السن */}
               <div className="mb-4">
                 <Button
-                  onClick={() => callStopdesk("0699744117")}
+                  onClick={() => callStopdesk("")}
                   size="lg"
                   className="w-full bg-orange-600 hover:bg-orange-700 text-white py-4 text-lg rounded-xl shadow-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
                   aria-label="اتصل الآن بمكتب DHD للحصول على العنوان والخريطة"
@@ -104,12 +104,12 @@ export default function PickupLocationPage() {
                     <h3 className="font-semibold text-orange-900 text-sm mb-1">أرقام مكتب DHD</h3>
                     <div className="space-y-2">
                       <button
-                        onClick={() => callStopdesk("0699744117")}
+                        onClick={() => callStopdesk("")}
                         className=" justify-center gap-2 text-orange-800 hover:text-orange-900 font-semibold text-base underline underline-offset-4"
-                        aria-label="اتصال بالرقم 0699744117"
+                       
                       >
                   
-                        <span dir="rtl">0699744117</span>
+                        <span dir="rtl"></span>
                       </button>
                     </div>
                   </div>
