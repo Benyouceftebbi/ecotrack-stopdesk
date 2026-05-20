@@ -24,7 +24,6 @@ import {
 } from "@/components/ui/select";
 import {
   ArrowLeft,
-  ArrowRight,
   MapPin,
   Phone,
   Search,
@@ -33,6 +32,8 @@ import {
   Download,
   FileText,
   FileSpreadsheet,
+  Copy,
+  Check,
 } from "lucide-react";
 import { WILAYA_NAMES } from "@/lib/wilayas";
 import { getCompany, COLITRACK } from "@/lib/companies";
@@ -338,75 +339,14 @@ export default function CompanyStopdesksPage({
           </Card>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filtered.map((s) => {
-              const code =
-                typeof s.code_wilaya === "string"
-                  ? Number(s.code_wilaya)
-                  : (s.code_wilaya as number | undefined);
-              const wilayaName = code ? WILAYA_NAMES[code] : s.wilaya || "";
-              const url = s.desk_url_code || s.id;
-
-              return (
-                <Link
-                  key={s.id}
-                  href={`/${url}`}
-                  className="group block focus:outline-none"
-                >
-                  <Card className="h-full border-slate-200 hover:shadow-lg transition-all hover:-translate-y-0.5">
-                    <CardContent className="p-5">
-                      <div className="flex items-start gap-3 mb-3">
-                        <div
-                          className="rounded-lg p-2 shrink-0"
-                          style={{ backgroundColor: company.soft }}
-                        >
-                          <MapPin
-                            className="h-5 w-5"
-                            style={{ color: company.primary }}
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-slate-900 line-clamp-2 leading-snug">
-                            {s.name || "Stopdesk"}
-                          </h3>
-                          {wilayaName && (
-                            <p className="text-xs text-slate-500 mt-1">
-                              {code ? `${code}000` : ""} {wilayaName}
-                              {s.commune ? ` · ${s.commune}` : ""}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      {s.adresse && (
-                        <p className="text-sm text-slate-600 line-clamp-2 mb-3 leading-relaxed">
-                          {s.adresse}
-                        </p>
-                      )}
-
-                      <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                        <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                          {s.phone ? (
-                            <>
-                              <Phone className="h-3.5 w-3.5" />
-                              <span className="font-medium">{s.phone}</span>
-                            </>
-                          ) : (
-                            <span>—</span>
-                          )}
-                        </div>
-                        <span
-                          className="inline-flex items-center gap-1 text-xs font-semibold group-hover:gap-2 transition-all"
-                          style={{ color: company.primary }}
-                        >
-                          Détails
-                          <ArrowRight className="h-3.5 w-3.5" />
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              );
-            })}
+            {filtered.map((s) => (
+              <StopdeskCard
+                key={s.id}
+                stop={s}
+                primary={company.primary}
+                soft={company.soft}
+              />
+            ))}
           </div>
         )}
       </main>
@@ -429,5 +369,175 @@ export default function CompanyStopdesksPage({
         </div>
       </footer>
     </div>
+  );
+}
+
+function StopdeskCard({
+  stop,
+  primary,
+  soft,
+}: {
+  stop: Stop;
+  primary: string;
+  soft: string;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  const code =
+    typeof stop.code_wilaya === "string"
+      ? Number(stop.code_wilaya)
+      : (stop.code_wilaya as number | undefined);
+  const wilayaName = code ? WILAYA_NAMES[code] : stop.wilaya || "";
+  const padded = code ? String(code).padStart(2, "0") : "";
+  const url = stop.desk_url_code || stop.id;
+  const detailHref = `/${url}`;
+
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const lines = [
+      stop.name ? `Stopdesk : ${stop.name}` : null,
+      wilayaName ? `Wilaya : ${padded ? padded + " - " : ""}${wilayaName}` : null,
+      stop.commune ? `Commune : ${stop.commune}` : null,
+      stop.adresse ? `Adresse : ${stop.adresse}` : null,
+      stop.phone ? `Téléphone : ${stop.phone}` : null,
+      stop.phone2 ? `Téléphone 2 : ${stop.phone2}` : null,
+      stop.map ? `Carte : ${stop.map}` : null,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    try {
+      await navigator.clipboard.writeText(lines);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch (err) {
+      console.error("[v0] copy failed", err);
+    }
+  };
+
+  const handleMap = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const target =
+      stop.map ||
+      `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+        [stop.name, stop.adresse, stop.commune, wilayaName, "Algeria"]
+          .filter(Boolean)
+          .join(", ")
+      )}`;
+    window.open(target, "_blank", "noopener,noreferrer");
+  };
+
+  const handleCall = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (stop.phone) window.location.href = `tel:${stop.phone}`;
+  };
+
+  return (
+    <Link
+      href={detailHref}
+      className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 rounded-2xl"
+      style={{ ["--tw-ring-color" as string]: primary }}
+    >
+      <Card className="relative h-full overflow-hidden border-slate-200 hover:shadow-lg transition-all hover:-translate-y-0.5">
+        {/* Watermark wilaya number */}
+        {padded && (
+          <span
+            aria-hidden
+            className="pointer-events-none absolute -right-2 top-2 text-[110px] font-black leading-none italic select-none"
+            style={{ color: primary, opacity: 0.06 }}
+          >
+            {padded}
+          </span>
+        )}
+
+        <CardContent className="p-5 relative">
+          {/* Header: badge + name */}
+          <div className="flex items-center gap-3 mb-3">
+            <div
+              className="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-base shrink-0 shadow-md"
+              style={{ backgroundColor: primary }}
+              aria-label={`Wilaya ${padded}`}
+            >
+              {padded || "?"}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-bold text-slate-900 text-base uppercase tracking-tight truncate">
+                {stop.name || wilayaName || "Stopdesk"}
+              </h3>
+              {(wilayaName || stop.commune) && (
+                <p className="text-xs text-slate-500 truncate">
+                  {wilayaName}
+                  {stop.commune ? ` · ${stop.commune}` : ""}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Address */}
+          {stop.adresse && (
+            <div
+              className="rounded-md pl-3 py-1 mb-4 border-l-2"
+              style={{ borderColor: primary }}
+            >
+              <p className="text-sm text-slate-700 leading-relaxed line-clamp-3">
+                {stop.adresse}
+              </p>
+            </div>
+          )}
+
+          {/* Action buttons */}
+          <div className="flex flex-wrap gap-2">
+            {stop.phone && (
+              <button
+                type="button"
+                onClick={handleCall}
+                className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold border bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 transition-colors"
+              >
+                <Phone className="h-3.5 w-3.5" />
+                {stop.phone}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handleMap}
+              className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold border transition-colors"
+              style={{
+                backgroundColor: soft,
+                borderColor: primary + "33",
+                color: primary,
+              }}
+            >
+              <MapPin className="h-3.5 w-3.5" />
+              Voir sur la carte
+            </button>
+            <button
+              type="button"
+              onClick={handleCopy}
+              className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold border transition-colors ${
+                copied
+                  ? "bg-emerald-600 border-emerald-600 text-white"
+                  : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              {copied ? (
+                <>
+                  <Check className="h-3.5 w-3.5" />
+                  Copié !
+                </>
+              ) : (
+                <>
+                  <Copy className="h-3.5 w-3.5" />
+                  Copier les détails
+                </>
+              )}
+            </button>
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
   );
 }
