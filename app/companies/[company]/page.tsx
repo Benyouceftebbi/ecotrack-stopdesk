@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import {
   ArrowLeft,
+  ArrowRight,
   MapPin,
   Phone,
   Search,
@@ -208,7 +209,7 @@ export default function CompanyStopdesksPage({
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 overflow-x-hidden">
       {/* Header with company branding */}
       <header
         className="text-white"
@@ -238,9 +239,9 @@ export default function CompanyStopdesksPage({
           </div>
         </div>
 
-        <div className="container mx-auto px-4 pb-12 pt-6">
-          <div className="flex items-center gap-5 flex-wrap">
-            <div className="bg-white rounded-2xl shadow-lg p-3 w-24 h-24 flex items-center justify-center shrink-0">
+        <div className="container mx-auto px-4 pb-10 pt-6">
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="bg-white rounded-2xl shadow-lg p-3 w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center shrink-0">
               <Image
                 src={company.logo || "/placeholder.svg"}
                 alt={`${company.name} logo`}
@@ -249,14 +250,14 @@ export default function CompanyStopdesksPage({
                 className="object-contain max-h-full max-w-full"
               />
             </div>
-            <div>
-              <p className="text-white/80 text-sm font-medium uppercase tracking-wider">
+            <div className="min-w-0 flex-1">
+              <p className="text-white/80 text-xs sm:text-sm font-medium uppercase tracking-wider">
                 Stopdesks
               </p>
-              <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight break-words">
                 {company.name}
               </h1>
-              <p className="text-white/85 mt-1 text-sm">
+              <p className="text-white/85 mt-1 text-xs sm:text-sm">
                 {loading
                   ? "Chargement…"
                   : `${stops.length} point${stops.length > 1 ? "s" : ""} de retrait disponible${stops.length > 1 ? "s" : ""} en Algérie`}
@@ -279,7 +280,7 @@ export default function CompanyStopdesksPage({
             />
           </div>
           <Select value={wilaya} onValueChange={setWilaya}>
-            <SelectTrigger className="md:w-64">
+            <SelectTrigger className="md:w-64 w-full">
               <SelectValue placeholder="Toutes les wilayas" />
             </SelectTrigger>
             <SelectContent>
@@ -447,7 +448,7 @@ function StopdeskCard({
         {padded && (
           <span
             aria-hidden
-            className="pointer-events-none absolute -right-2 top-2 text-[110px] font-black leading-none italic select-none"
+            className="pointer-events-none absolute right-2 top-2 text-7xl sm:text-8xl font-black leading-none italic select-none"
             style={{ color: primary, opacity: 0.06 }}
           >
             {padded}
@@ -535,6 +536,17 @@ function StopdeskCard({
                 </>
               )}
             </button>
+          </div>
+
+          {/* Détails link */}
+          <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-end">
+            <span
+              className="inline-flex items-center gap-1 text-xs font-semibold group-hover:gap-2 transition-all"
+              style={{ color: primary }}
+            >
+              Voir les détails
+              <ArrowRight className="h-3.5 w-3.5" />
+            </span>
           </div>
         </CardContent>
       </Card>

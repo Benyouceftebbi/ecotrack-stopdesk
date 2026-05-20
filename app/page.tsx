@@ -22,7 +22,7 @@ export default function HomePage() {
   const selectedCompany = COMPANIES.find((c) => c.id === selected) ?? COMPANIES[0];
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 font-sans">
+    <div className="min-h-screen bg-white text-slate-900 font-sans overflow-x-hidden">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur border-b border-slate-100">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
