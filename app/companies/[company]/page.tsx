@@ -239,8 +239,8 @@ export default function CompanyStopdesksPage({
           </div>
         </div>
 
-        <div className="container mx-auto px-4 pb-10 pt-6">
-          <div className="flex items-center gap-4 flex-wrap">
+        <div className="container mx-auto px-4 pb-10 pt-6 max-w-full">
+          <div className="flex items-center gap-4 flex-wrap min-w-0">
             <div className="bg-white rounded-2xl shadow-lg p-3 w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center shrink-0">
               <Image
                 src={company.logo || "/placeholder.svg"}
@@ -269,7 +269,7 @@ export default function CompanyStopdesksPage({
 
       {/* Filters bar */}
       <div className="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-sm">
-        <div className="container mx-auto px-4 py-3 flex flex-col md:flex-row gap-3 md:items-center">
+        <div className="container mx-auto px-4 py-3 flex flex-col md:flex-row gap-3 md:items-center max-w-full">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
@@ -322,7 +322,7 @@ export default function CompanyStopdesksPage({
       </div>
 
       {/* List */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 max-w-full">
         {loading ? (
           <div className="flex items-center justify-center py-24 text-slate-500">
             <Loader2 className="h-5 w-5 animate-spin mr-2" />
@@ -339,7 +339,7 @@ export default function CompanyStopdesksPage({
             </CardContent>
           </Card>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
             {filtered.map((s) => (
               <StopdeskCard
                 key={s.id}
