@@ -444,17 +444,6 @@ function StopdeskCard({
       style={{ ["--tw-ring-color" as string]: primary }}
     >
       <Card className="relative h-full w-full overflow-hidden border-slate-200 hover:shadow-lg transition-all hover:-translate-y-0.5">
-        {/* Watermark wilaya number */}
-        {padded && (
-          <span
-            aria-hidden
-            className="pointer-events-none absolute right-3 top-3 text-5xl font-black leading-none select-none tracking-tight"
-            style={{ color: primary, opacity: 0.08 }}
-          >
-            {padded}
-          </span>
-        )}
-
         <CardContent className="p-4 sm:p-5 relative">
           {/* Header: badge + name */}
           <div className="flex items-center gap-3 mb-3">
