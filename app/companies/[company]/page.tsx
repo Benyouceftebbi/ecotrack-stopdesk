@@ -443,19 +443,19 @@ function StopdeskCard({
       className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 rounded-2xl"
       style={{ ["--tw-ring-color" as string]: primary }}
     >
-      <Card className="relative h-full overflow-hidden border-slate-200 hover:shadow-lg transition-all hover:-translate-y-0.5">
+      <Card className="relative h-full w-full overflow-hidden border-slate-200 hover:shadow-lg transition-all hover:-translate-y-0.5">
         {/* Watermark wilaya number */}
         {padded && (
           <span
             aria-hidden
-            className="pointer-events-none absolute right-2 top-2 text-7xl sm:text-8xl font-black leading-none italic select-none"
-            style={{ color: primary, opacity: 0.06 }}
+            className="pointer-events-none absolute right-3 top-3 text-5xl font-black leading-none select-none tracking-tight"
+            style={{ color: primary, opacity: 0.08 }}
           >
             {padded}
           </span>
         )}
 
-        <CardContent className="p-5 relative">
+        <CardContent className="p-4 sm:p-5 relative">
           {/* Header: badge + name */}
           <div className="flex items-center gap-3 mb-3">
             <div
@@ -539,12 +539,15 @@ function StopdeskCard({
           </div>
 
           {/* Détails link */}
-          <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-end">
+          <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
+            <span className="text-[11px] uppercase tracking-wider text-slate-400 font-medium">
+              {wilayaName}
+            </span>
             <span
-              className="inline-flex items-center gap-1 text-xs font-semibold group-hover:gap-2 transition-all"
+              className="inline-flex items-center gap-1 text-xs font-semibold group-hover:gap-2 transition-all whitespace-nowrap"
               style={{ color: primary }}
             >
-              Voir les détails
+              Détails
               <ArrowRight className="h-3.5 w-3.5" />
             </span>
           </div>
