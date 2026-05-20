@@ -32,8 +32,14 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="fr" className={`${inter.variable} ${roboto.variable} antialiased bg-white`}>
-      <body className="font-sans">{children}</body>
+    <html
+      lang="fr"
+      className={`${inter.variable} ${roboto.variable} antialiased bg-white`}
+      suppressHydrationWarning
+    >
+      <body className="font-sans" suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   )
 }

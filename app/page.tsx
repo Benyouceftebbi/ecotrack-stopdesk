@@ -379,9 +379,7 @@ export default function HomePage() {
               C
             </div>
             <span className="font-semibold text-slate-900">Colitrack</span>
-            <span className="text-xs text-slate-500">
-              © {new Date().getFullYear()}
-            </span>
+            <span className="text-xs text-slate-500">© 2026</span>
           </div>
           <p className="text-sm text-slate-500">
             Annuaire des Stopdesks en Algérie — Powered by Colitrack
