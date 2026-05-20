@@ -30,9 +30,18 @@ import {
   Search,
   Loader2,
   Building2,
+  Download,
+  FileText,
+  FileSpreadsheet,
 } from "lucide-react";
 import { WILAYA_NAMES } from "@/lib/wilayas";
 import { getCompany, COLITRACK } from "@/lib/companies";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type Stop = EcoStop & { id: string; desk_url_code?: string };
 
@@ -127,6 +136,76 @@ export default function CompanyStopdesksPage({
     });
   }, [stops, search, wilaya]);
 
+  const buildRows = (items: Stop[]) =>
+    items.map((s) => {
+      const code =
+        typeof s.code_wilaya === "string"
+          ? Number(s.code_wilaya)
+          : (s.code_wilaya as number | undefined);
+      return {
+        Nom: s.name || "",
+        Wilaya: code ? `${String(code).padStart(2, "0")} - ${WILAYA_NAMES[code] || ""}` : s.wilaya || "",
+        Commune: s.commune || "",
+        Adresse: s.adresse || "",
+        Telephone: s.phone || "",
+        Lien: `${typeof window !== "undefined" ? window.location.origin : ""}/${s.desk_url_code || s.id}`,
+      };
+    });
+
+  const handleExportExcel = async () => {
+    const XLSX = await import("xlsx");
+    const rows = buildRows(filtered);
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws["!cols"] = [
+      { wch: 32 },
+      { wch: 22 },
+      { wch: 22 },
+      { wch: 50 },
+      { wch: 18 },
+      { wch: 40 },
+    ];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, company.name.slice(0, 30));
+    XLSX.writeFile(wb, `stopdesks-${company.id}.xlsx`);
+  };
+
+  const handleExportPdf = async () => {
+    const { jsPDF } = await import("jspdf");
+    const autoTable = (await import("jspdf-autotable")).default;
+    const rows = buildRows(filtered);
+    const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+
+    doc.setFontSize(16);
+    doc.setTextColor(company.primary);
+    doc.text(`${company.name} — Stopdesks en Algérie`, 40, 40);
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(
+      `${rows.length} point(s) · Généré par Colitrack · ${new Date().toLocaleDateString("fr-FR")}`,
+      40,
+      58
+    );
+
+    autoTable(doc, {
+      startY: 78,
+      head: [["Nom", "Wilaya", "Commune", "Adresse", "Téléphone"]],
+      body: rows.map((r) => [r.Nom, r.Wilaya, r.Commune, r.Adresse, r.Telephone]),
+      styles: { fontSize: 9, cellPadding: 6, overflow: "linebreak" },
+      headStyles: { fillColor: company.primary, textColor: 255, fontStyle: "bold" },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+      columnStyles: {
+        0: { cellWidth: 150 },
+        1: { cellWidth: 110 },
+        2: { cellWidth: 110 },
+        3: { cellWidth: 250 },
+        4: { cellWidth: 90 },
+      },
+      margin: { left: 40, right: 40 },
+    });
+
+    doc.save(`stopdesks-${company.id}.pdf`);
+  };
+
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header with company branding */}
@@ -214,6 +293,29 @@ export default function CompanyStopdesksPage({
           <div className="text-sm text-slate-500 md:ml-2 md:whitespace-nowrap">
             {filtered.length} résultat{filtered.length > 1 ? "s" : ""}
           </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                size="sm"
+                disabled={loading || filtered.length === 0}
+                className="md:ml-auto text-white hover:opacity-90"
+                style={{ backgroundColor: company.primary }}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Exporter
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={handleExportExcel} className="cursor-pointer">
+                <FileSpreadsheet className="h-4 w-4 mr-2 text-emerald-600" />
+                Excel (.xlsx)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportPdf} className="cursor-pointer">
+                <FileText className="h-4 w-4 mr-2 text-rose-600" />
+                PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
