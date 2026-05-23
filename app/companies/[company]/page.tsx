@@ -171,41 +171,66 @@ export default function CompanyStopdesksPage({
     XLSX.writeFile(wb, `stopdesks-${company.id}.xlsx`);
   };
 
+  const hexToRgb = (hex: string): [number, number, number] => {
+    const h = hex.replace("#", "");
+    const full =
+      h.length === 3
+        ? h
+            .split("")
+            .map((c) => c + c)
+            .join("")
+        : h;
+    const num = parseInt(full || "000000", 16);
+    return [(num >> 16) & 255, (num >> 8) & 255, num & 255];
+  };
+
   const handleExportPdf = async () => {
-    const { jsPDF } = await import("jspdf");
-    const autoTable = (await import("jspdf-autotable")).default;
-    const rows = buildRows(filtered);
-    const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+    try {
+      const { jsPDF } = await import("jspdf");
+      const autoTableModule = await import("jspdf-autotable");
+      const autoTable = autoTableModule.default;
+      const rows = buildRows(filtered);
+      const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
 
-    doc.setFontSize(16);
-    doc.setTextColor(company.primary);
-    doc.text(`${company.name} — Stopdesks en Algérie`, 40, 40);
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(
-      `${rows.length} point(s) · Généré par Colitrack · ${new Date().toLocaleDateString("fr-FR")}`,
-      40,
-      58
-    );
+      const primaryRgb = hexToRgb(company.primary);
 
-    autoTable(doc, {
-      startY: 78,
-      head: [["Nom", "Wilaya", "Commune", "Adresse", "Téléphone"]],
-      body: rows.map((r) => [r.Nom, r.Wilaya, r.Commune, r.Adresse, r.Telephone]),
-      styles: { fontSize: 9, cellPadding: 6, overflow: "linebreak" },
-      headStyles: { fillColor: company.primary, textColor: 255, fontStyle: "bold" },
-      alternateRowStyles: { fillColor: [248, 250, 252] },
-      columnStyles: {
-        0: { cellWidth: 150 },
-        1: { cellWidth: 110 },
-        2: { cellWidth: 110 },
-        3: { cellWidth: 250 },
-        4: { cellWidth: 90 },
-      },
-      margin: { left: 40, right: 40 },
-    });
+      doc.setFontSize(16);
+      doc.setTextColor(primaryRgb[0], primaryRgb[1], primaryRgb[2]);
+      doc.text(`${company.name} - Stopdesks en Algerie`, 40, 40);
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      doc.text(
+        `${rows.length} point(s) - Genere par Colitrack - ${new Date().toLocaleDateString("fr-FR")}`,
+        40,
+        58
+      );
 
-    doc.save(`stopdesks-${company.id}.pdf`);
+      autoTable(doc, {
+        startY: 78,
+        head: [["Nom", "Wilaya", "Commune", "Adresse", "Telephone"]],
+        body: rows.map((r) => [r.Nom, r.Wilaya, r.Commune, r.Adresse, r.Telephone]),
+        styles: { fontSize: 9, cellPadding: 6, overflow: "linebreak" },
+        headStyles: {
+          fillColor: primaryRgb,
+          textColor: [255, 255, 255],
+          fontStyle: "bold",
+        },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        columnStyles: {
+          0: { cellWidth: 150 },
+          1: { cellWidth: 110 },
+          2: { cellWidth: 110 },
+          3: { cellWidth: 250 },
+          4: { cellWidth: 90 },
+        },
+        margin: { left: 40, right: 40 },
+      });
+
+      doc.save(`stopdesks-${company.id}.pdf`);
+    } catch (err) {
+      console.error("[v0] PDF export failed", err);
+      alert("Échec de l'export PDF. Veuillez réessayer.");
+    }
   };
 
   return (
@@ -354,8 +379,8 @@ export default function CompanyStopdesksPage({
 
       {/* Footer */}
       <footer className="border-t border-slate-200 bg-white py-8 mt-8">
-        <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-sm text-slate-500">
+        <div className="container mx-auto px-4 flex items-center justify-center">
+          <p className="text-sm text-slate-500 text-center">
             Annuaire {company.name} propulsé par{" "}
             <span
               className="font-semibold"
@@ -364,9 +389,6 @@ export default function CompanyStopdesksPage({
               Colitrack
             </span>
           </p>
-          <Button asChild variant="outline" size="sm">
-            <Link href="/">Voir d&apos;autres sociétés</Link>
-          </Button>
         </div>
       </footer>
     </div>
@@ -441,9 +463,11 @@ function StopdeskCard({
     <Link
       href={detailHref}
       className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 rounded-2xl"
-      style={{ ["--tw-ring-color" as string]: primary }}
+      style={{ ["--tw-ring-color" as string]: primary, ["--card-hover" as string]: primary }}
     >
-      <Card className="relative h-full w-full overflow-hidden border-slate-200 hover:shadow-lg transition-all hover:-translate-y-0.5">
+      <Card
+        className="relative h-full w-full overflow-hidden border-2 border-slate-200 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 hover:[border-color:var(--card-hover)]"
+      >
         <CardContent className="p-4 sm:p-5 relative">
           {/* Header: badge + name */}
           <div className="flex items-center gap-3 mb-3">

@@ -1,26 +1,18 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   ArrowRight,
-  MapPin,
   Search,
-  Truck,
   Building2,
   Sparkles,
-  CheckCircle2,
   Globe,
 } from "lucide-react";
-import { COMPANIES, COLITRACK } from "@/lib/companies";
+import { COLITRACK } from "@/lib/companies";
 
 export default function HomePage() {
-  const [selected, setSelected] = useState<string>(COMPANIES[0].id);
-  const selectedCompany = COMPANIES.find((c) => c.id === selected) ?? COMPANIES[0];
-
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans overflow-x-hidden">
       {/* Header */}
@@ -40,9 +32,6 @@ export default function HomePage() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
-            <a href="#companies" className="hover:text-slate-900 transition">
-              Sociétés
-            </a>
             <a href="#features" className="hover:text-slate-900 transition">
               Fonctionnalités
             </a>
@@ -56,7 +45,7 @@ export default function HomePage() {
             className="text-white shadow-sm"
             style={{ backgroundColor: COLITRACK.primary }}
           >
-            <a href="#companies">
+            <a href="#how">
               Commencer
               <ArrowRight className="ml-1 h-4 w-4" />
             </a>
@@ -104,99 +93,11 @@ export default function HomePage() {
               numéro et à la carte.
             </p>
 
-            {/* Company selector */}
-            <Card
-              id="companies"
-              className="mt-10 text-left shadow-xl border-slate-100"
-            >
-              <CardContent className="p-6 md:p-8">
-                <div className="flex items-center gap-2 mb-4">
-                  <Truck className="h-5 w-5" style={{ color: COLITRACK.primary }} />
-                  <h2 className="font-semibold text-slate-900">
-                    Choisissez votre société de livraison
-                  </h2>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                  {COMPANIES.map((c) => {
-                    const active = c.id === selected;
-                    return (
-                      <button
-                        key={c.id}
-                        type="button"
-                        onClick={() => setSelected(c.id)}
-                        className={`group relative rounded-xl border-2 p-4 transition-all bg-white hover:-translate-y-0.5 ${
-                          active
-                            ? "shadow-md"
-                            : "border-slate-200 hover:border-slate-300"
-                        }`}
-                        style={
-                          active
-                            ? {
-                                borderColor: COLITRACK.primary,
-                                boxShadow: `0 4px 16px -4px ${COLITRACK.primary}40`,
-                              }
-                            : undefined
-                        }
-                        aria-pressed={active}
-                      >
-                        <div className="aspect-[3/2] relative flex items-center justify-center mb-2">
-                          <Image
-                            src={c.logo || "/placeholder.svg"}
-                            alt={`${c.name} logo`}
-                            fill
-                            className="object-contain p-1"
-                            sizes="(max-width: 768px) 40vw, 160px"
-                          />
-                        </div>
-                        <p className="text-xs font-semibold text-center text-slate-700">
-                          {c.name}
-                        </p>
-                        {active && (
-                          <span
-                            className="absolute -top-2 -right-2 rounded-full p-1"
-                            style={{ backgroundColor: COLITRACK.primary }}
-                          >
-                            <CheckCircle2 className="h-3.5 w-3.5 text-white" />
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div className="mt-6 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-                  <p className="text-sm text-slate-500">
-                    Société sélectionnée :{" "}
-                    <span
-                      className="font-semibold"
-                      style={{ color: selectedCompany.primary }}
-                    >
-                      {selectedCompany.name}
-                    </span>
-                  </p>
-                  <Button
-                    asChild
-                    size="lg"
-                    className="text-white"
-                    style={{ backgroundColor: COLITRACK.primary }}
-                  >
-                    <Link href={`/companies/${selectedCompany.id}`}>
-                      <MapPin className="mr-2 h-4 w-4" />
-                      Voir les Stopdesks
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Stats */}
-            <div className="mt-10 grid grid-cols-3 gap-4 max-w-2xl mx-auto">
+            <div className="mt-12 grid grid-cols-2 gap-4 max-w-xl mx-auto">
               {[
                 { v: "58", l: "Wilayas couvertes" },
                 { v: "2000+", l: "Points de retrait" },
-                { v: `${COMPANIES.length}`, l: "Sociétés partenaires" },
               ].map((s) => (
                 <div
                   key={s.l}
@@ -244,8 +145,8 @@ export default function HomePage() {
               },
               {
                 icon: Building2,
-                title: "Toutes les sociétés",
-                desc: "DHD, HHD Express, MM Express, Noest, MD07 et bien plus dans une seule interface.",
+                title: "Couverture multi-réseaux",
+                desc: "Tous les réseaux de stopdesks de livraison réunis dans une seule interface fluide.",
               },
               {
                 icon: Globe,
@@ -358,8 +259,8 @@ export default function HomePage() {
                 className="mt-8 bg-white hover:bg-white/90 shadow-lg"
                 style={{ color: COLITRACK.primaryDark }}
               >
-                <a href="#companies">
-                  Commencer maintenant
+                <a href="#how">
+                  Découvrir comment ça marche
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </a>
               </Button>
