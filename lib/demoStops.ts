@@ -2,6 +2,19 @@ import type { EcoStop } from "@/types/ecostop";
 
 type DemoStop = EcoStop & { id: string; desk_url_code?: string };
 
+const DEFAULT_HOURS = [
+  { day: "Samedi", openTime: "09:00", closeTime: "18:00" },
+  { day: "Dimanche", openTime: "09:00", closeTime: "18:00" },
+  { day: "Lundi", openTime: "09:00", closeTime: "18:00" },
+  { day: "Mardi", openTime: "09:00", closeTime: "18:00" },
+  { day: "Mercredi", openTime: "09:00", closeTime: "18:00" },
+  { day: "Jeudi", openTime: "09:00", closeTime: "18:00" },
+  { day: "Vendredi", openTime: "Fermé", closeTime: "" },
+];
+
+const buildIframe = (q: string) =>
+  `https://www.google.com/maps?q=${encodeURIComponent(q)}&output=embed`;
+
 /**
  * Hardcoded demonstration stopdesks for Anderson Logistique E-commerce.
  * Used until the company has its real data wired into Firestore.
@@ -18,7 +31,9 @@ export const ANDERSON_DEMO_STOPS: DemoStop[] = [
     commune: "Alger Centre",
     adresse: "12 Rue Didouche Mourad, en face de la Grande Poste, Alger Centre",
     map: "https://www.google.com/maps/search/?api=1&query=Rue+Didouche+Mourad+Alger",
+    iframeMap: buildIframe("Rue Didouche Mourad, Alger Centre"),
     company: "anderson",
+    hub_working_days: DEFAULT_HOURS,
   },
   {
     id: "anderson-bab-ezzouar",
@@ -31,7 +46,9 @@ export const ANDERSON_DEMO_STOPS: DemoStop[] = [
     commune: "Bab Ezzouar",
     adresse: "Cité 1100 Logements, Bât B12, Local 3, Bab Ezzouar",
     map: "https://www.google.com/maps/search/?api=1&query=Bab+Ezzouar+Alger",
+    iframeMap: buildIframe("Bab Ezzouar, Alger"),
     company: "anderson",
+    hub_working_days: DEFAULT_HOURS,
   },
   {
     id: "anderson-oran-es-senia",
@@ -44,7 +61,9 @@ export const ANDERSON_DEMO_STOPS: DemoStop[] = [
     commune: "Es-Sénia",
     adresse: "Route de l'aéroport, à coté de la station Naftal, Es-Sénia, Oran",
     map: "https://www.google.com/maps/search/?api=1&query=Es-Senia+Oran",
+    iframeMap: buildIframe("Es-Sénia, Oran"),
     company: "anderson",
+    hub_working_days: DEFAULT_HOURS,
   },
   {
     id: "anderson-oran-bir-el-djir",
@@ -57,7 +76,9 @@ export const ANDERSON_DEMO_STOPS: DemoStop[] = [
     commune: "Bir El Djir",
     adresse: "Avenue de l'ALN, en face de l'USTO, Bir El Djir",
     map: "https://www.google.com/maps/search/?api=1&query=Bir+El+Djir+Oran",
+    iframeMap: buildIframe("Bir El Djir, Oran"),
     company: "anderson",
+    hub_working_days: DEFAULT_HOURS,
   },
   {
     id: "anderson-constantine-zouaghi",
@@ -70,7 +91,9 @@ export const ANDERSON_DEMO_STOPS: DemoStop[] = [
     commune: "Zouaghi Slimane",
     adresse: "Cité Boussouf, Rue des Frères Abbas, Zouaghi Slimane",
     map: "https://www.google.com/maps/search/?api=1&query=Zouaghi+Constantine",
+    iframeMap: buildIframe("Zouaghi Slimane, Constantine"),
     company: "anderson",
+    hub_working_days: DEFAULT_HOURS,
   },
   {
     id: "anderson-annaba-centre",
@@ -83,7 +106,9 @@ export const ANDERSON_DEMO_STOPS: DemoStop[] = [
     commune: "Annaba",
     adresse: "Cours de la Révolution, à coté du théâtre régional, Annaba",
     map: "https://www.google.com/maps/search/?api=1&query=Cours+Revolution+Annaba",
+    iframeMap: buildIframe("Cours de la Révolution, Annaba"),
     company: "anderson",
+    hub_working_days: DEFAULT_HOURS,
   },
   {
     id: "anderson-setif-centre",
@@ -96,7 +121,9 @@ export const ANDERSON_DEMO_STOPS: DemoStop[] = [
     commune: "Sétif",
     adresse: "Avenue du 1er Novembre, en face du parc Aïn El Fouara, Sétif",
     map: "https://www.google.com/maps/search/?api=1&query=Ain+El+Fouara+Setif",
+    iframeMap: buildIframe("Aïn El Fouara, Sétif"),
     company: "anderson",
+    hub_working_days: DEFAULT_HOURS,
   },
   {
     id: "anderson-blida-centre",
@@ -109,7 +136,9 @@ export const ANDERSON_DEMO_STOPS: DemoStop[] = [
     commune: "Blida",
     adresse: "Boulevard Larbi Tebessi, à coté de la place du 1er Novembre, Blida",
     map: "https://www.google.com/maps/search/?api=1&query=Larbi+Tebessi+Blida",
+    iframeMap: buildIframe("Boulevard Larbi Tebessi, Blida"),
     company: "anderson",
+    hub_working_days: DEFAULT_HOURS,
   },
   {
     id: "anderson-tlemcen-centre",
@@ -122,7 +151,9 @@ export const ANDERSON_DEMO_STOPS: DemoStop[] = [
     commune: "Tlemcen",
     adresse: "Rue de l'Indépendance, en face de la médersa, Tlemcen",
     map: "https://www.google.com/maps/search/?api=1&query=Tlemcen+centre",
+    iframeMap: buildIframe("Tlemcen centre"),
     company: "anderson",
+    hub_working_days: DEFAULT_HOURS,
   },
   {
     id: "anderson-bejaia-centre",
@@ -135,7 +166,9 @@ export const ANDERSON_DEMO_STOPS: DemoStop[] = [
     commune: "Béjaïa",
     adresse: "Boulevard de la Liberté, en face du port, Béjaïa",
     map: "https://www.google.com/maps/search/?api=1&query=Bejaia+port",
+    iframeMap: buildIframe("Boulevard de la Liberté, Béjaïa"),
     company: "anderson",
+    hub_working_days: DEFAULT_HOURS,
   },
   {
     id: "anderson-tizi-ouzou",
@@ -148,7 +181,9 @@ export const ANDERSON_DEMO_STOPS: DemoStop[] = [
     commune: "Tizi Ouzou",
     adresse: "Boulevard Stiti Ali, Nouvelle Ville, Tizi Ouzou",
     map: "https://www.google.com/maps/search/?api=1&query=Nouvelle+Ville+Tizi+Ouzou",
+    iframeMap: buildIframe("Nouvelle Ville, Tizi Ouzou"),
     company: "anderson",
+    hub_working_days: DEFAULT_HOURS,
   },
   {
     id: "anderson-batna-centre",
@@ -161,10 +196,31 @@ export const ANDERSON_DEMO_STOPS: DemoStop[] = [
     commune: "Batna",
     adresse: "Avenue de la République, près du marché central, Batna",
     map: "https://www.google.com/maps/search/?api=1&query=Batna+centre",
+    iframeMap: buildIframe("Batna centre"),
     company: "anderson",
+    hub_working_days: DEFAULT_HOURS,
   },
 ];
 
 export const DEMO_STOPS_BY_COMPANY: Record<string, DemoStop[]> = {
   anderson: ANDERSON_DEMO_STOPS,
 };
+
+/**
+ * Look up a demo stop by either its document id or its desk_url_code.
+ * Used as a fallback when Firestore has no matching record.
+ */
+export function findDemoStop(urlcode: string): DemoStop | null {
+  const needle = urlcode.toLowerCase();
+  for (const list of Object.values(DEMO_STOPS_BY_COMPANY)) {
+    for (const s of list) {
+      if (
+        s.id.toLowerCase() === needle ||
+        (s.desk_url_code && s.desk_url_code.toLowerCase() === needle)
+      ) {
+        return s;
+      }
+    }
+  }
+  return null;
+}
