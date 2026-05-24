@@ -9,7 +9,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, Phone, Clock, Package, Navigation } from "lucide-react";
 import Image from "next/image";
 import { WILAYA_NAMES } from "@/lib/wilayas";
-import { findDemoStop } from "@/lib/demoStops";
 
 type Language = "fr" | "ar";
 
@@ -112,19 +111,19 @@ const getTheme = (companyName?: string): StopdeskTheme => {
     };
   }
 
-  // 🔴 Anderson Logistique E-commerce: red & yellow theme on black footer
-  if (name === "anderson" || name === "anderson logistique e-commerce" || name === "anderson logistique") {
+  // 🔴 Anderson: red primary, black secondary, soft yellow tint
+  if (name === "anderson") {
     return {
-      bgGradient: "from-red-50 to-white",
-      primaryText: "text-red-900",
-      secondaryText: "text-red-800",
+      bgGradient: "from-[#FEF9C3] to-white",
+      primaryText: "text-[#0A0A0A]",
+      secondaryText: "text-[#DC2626]",
       mutedText: "text-gray-600",
-      cardAccentBg: "bg-yellow-50",
-      iconCircleBg: "bg-red-600",
-      phoneText: "text-red-600 hover:text-red-700",
-      buttonBg: "bg-red-600",
+      cardAccentBg: "bg-[#FEF9C3]",
+      iconCircleBg: "bg-[#DC2626]",
+      phoneText: "text-[#DC2626] hover:text-red-700",
+      buttonBg: "bg-[#DC2626]",
       buttonHoverBg: "hover:bg-red-700",
-      footerBg: "bg-black",
+      footerBg: "bg-[#0A0A0A]",
     };
   }
 
@@ -142,6 +141,30 @@ const getTheme = (companyName?: string): StopdeskTheme => {
     footerBg: "bg-blue-900",
   };
 };
+
+// 🔴 Hardcoded Anderson stopdesk (used when urlcode starts with "ANDR")
+const ANDERSON_MOCK = {
+  name: "Anderson Logistique – Stopdesk Alger Centre",
+  adresse: "12 Rue Didouche Mourad",
+  commune: "Alger Centre",
+  wilaya: "Alger",
+  code_wilaya: 16,
+  phone: "0770 12 34 56",
+  phone2: "021 63 45 78",
+  company: "anderson",
+  lng: "fr",
+  desk_url_code: "ANDR001",
+  map: "https://www.google.com/maps/search/?api=1&query=Rue+Didouche+Mourad+Alger",
+  iframeMap: "https://www.google.com/maps?q=Rue+Didouche+Mourad+Alger&output=embed",
+  hub_working_days: [
+    { day: "Dimanche", openTime: "08:30", closeTime: "17:00" },
+    { day: "Lundi", openTime: "08:30", closeTime: "17:00" },
+    { day: "Mardi", openTime: "08:30", closeTime: "17:00" },
+    { day: "Mercredi", openTime: "08:30", closeTime: "17:00" },
+    { day: "Jeudi", openTime: "08:30", closeTime: "16:00" },
+  ],
+} as EcoStop;
+
 export default function StopdeskPage({ params }: { params: { urlcode: string } }) {
 
   const urlcode = decodeURIComponent(params.urlcode || "").trim();
@@ -161,37 +184,37 @@ export default function StopdeskPage({ params }: { params: { urlcode: string } }
     (async () => {
       setLoading(true);
 
-      let data: EcoStop | null = null;
-
-      try {
-        // 🔹 Step 1. Try to find stop in Firestore
-        const dref = doc(db, "EcoStop", urlcode);
-        const dsnap = await getDoc(dref);
-
-        if (dsnap.exists()) {
-          data = (dsnap.data() as EcoStop) ?? null;
-        } else {
-          // fallback query by desk_url_code
-          const q1 = query(collection(db, "EcoStop"), where("desk_url_code", "==", urlcode), limit(1));
-          const q2 = query(collection(db, "EcoStop"), where("desk_url_code", "==", urlcode.toUpperCase()), limit(1));
-          const [r1, r2] = await Promise.all([getDocs(q1), getDocs(q2)]);
-          const m = r1.docs[0] || r2.docs[0];
-          if (m) data = (m.data() as EcoStop) ?? null;
-        }
-      } catch (err) {
-        console.error("[v0] Firestore lookup failed", err);
+      // 🔴 Anderson: skip Firestore entirely, use hardcoded data
+      if (urlcode.toUpperCase().startsWith("ANDR")) {
+        if (!alive) return;
+        setStop(ANDERSON_MOCK);
+        setCompany("anderson");
+        setLang(ANDERSON_MOCK.lng === "ar" ? "ar" : "fr");
+        setLoading(false);
+        return;
       }
 
-      // 🔹 Step 2. Fall back to hardcoded demo data (e.g. Anderson)
-      if (!data) {
-        const demo = findDemoStop(urlcode);
-        if (demo) data = demo;
+      // 🔹 Step 1. Try to find stop in Firestore
+      const dref = doc(db, "EcoStop", urlcode);
+      const dsnap = await getDoc(dref);
+
+      let data: EcoStop | null = null;
+
+      if (dsnap.exists()) {
+        data = (dsnap.data() as EcoStop) ?? null;
+      } else {
+        // fallback query by desk_url_code
+        const q1 = query(collection(db, "EcoStop"), where("desk_url_code", "==", urlcode), limit(1));
+        const q2 = query(collection(db, "EcoStop"), where("desk_url_code", "==", urlcode.toUpperCase()), limit(1));
+        const [r1, r2] = await Promise.all([getDocs(q1), getDocs(q2)]);
+        const m = r1.docs[0] || r2.docs[0];
+        if (m) data = (m.data() as EcoStop) ?? null;
       }
 
       if (!alive) return;
       setStop(data);
       setCompany(data?.company ?? null);
-
+      
       // Set language based on doc.data.lng
       if (data?.lng === "ar") {
         setLang("ar");
