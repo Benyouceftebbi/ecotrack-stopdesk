@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import { WILAYA_NAMES } from "@/lib/wilayas";
 import { getCompany, COLITRACK } from "@/lib/companies";
+import { DEMO_STOPS_BY_COMPANY } from "@/lib/demoStops";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -71,20 +72,29 @@ export default function CompanyStopdesksPage({
     (async () => {
       setLoading(true);
       try {
-        // Firestore stores company in different casings; try a few.
-        const candidates = [company.id, company.name, company.id.toLowerCase()];
+        // Start with hardcoded demo data for companies that have it.
         const seen = new Map<string, Stop>();
+        const demo = DEMO_STOPS_BY_COMPANY[company.id.toLowerCase()];
+        if (demo) {
+          demo.forEach((d) => seen.set(d.id, d as Stop));
+        }
 
+        // Merge with Firestore data (different casings for company field).
+        const candidates = [company.id, company.name, company.id.toLowerCase()];
         await Promise.all(
           candidates.map(async (val) => {
-            const snap = await getDocs(
-              query(collection(db, "EcoStop"), where("company", "==", val))
-            );
-            snap.docs.forEach((d) => {
-              if (!seen.has(d.id)) {
-                seen.set(d.id, { id: d.id, ...(d.data() as EcoStop) });
-              }
-            });
+            try {
+              const snap = await getDocs(
+                query(collection(db, "EcoStop"), where("company", "==", val))
+              );
+              snap.docs.forEach((d) => {
+                if (!seen.has(d.id)) {
+                  seen.set(d.id, { id: d.id, ...(d.data() as EcoStop) });
+                }
+              });
+            } catch (err) {
+              console.error("[v0] firestore query failed for", val, err);
+            }
           })
         );
 
