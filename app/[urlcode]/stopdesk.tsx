@@ -111,6 +111,22 @@ const getTheme = (companyName?: string): StopdeskTheme => {
     };
   }
 
+  // 🔴 Anderson: red primary, black secondary, soft yellow tint
+  if (name === "anderson") {
+    return {
+      bgGradient: "from-[#FEF9C3] to-white",
+      primaryText: "text-[#0A0A0A]",
+      secondaryText: "text-[#DC2626]",
+      mutedText: "text-gray-600",
+      cardAccentBg: "bg-[#FEF9C3]",
+      iconCircleBg: "bg-[#DC2626]",
+      phoneText: "text-[#DC2626] hover:text-red-700",
+      buttonBg: "bg-[#DC2626]",
+      buttonHoverBg: "hover:bg-red-700",
+      footerBg: "bg-[#0A0A0A]",
+    };
+  }
+
   // ✅ Default theme (your original)
   return {
     bgGradient: "from-blue-50 to-white",
@@ -125,6 +141,30 @@ const getTheme = (companyName?: string): StopdeskTheme => {
     footerBg: "bg-blue-900",
   };
 };
+
+// 🔴 Hardcoded Anderson stopdesk (used when urlcode starts with "ANDR")
+const ANDERSON_MOCK = {
+  name: "Anderson Logistique – Stopdesk Alger Centre",
+  adresse: "12 Rue Didouche Mourad",
+  commune: "Alger Centre",
+  wilaya: "Alger",
+  code_wilaya: 16,
+  phone: "0770 12 34 56",
+  phone2: "021 63 45 78",
+  company: "anderson",
+  lng: "fr",
+  desk_url_code: "ANDR001",
+  map: "https://www.google.com/maps/search/?api=1&query=Rue+Didouche+Mourad+Alger",
+  iframeMap: "https://www.google.com/maps?q=Rue+Didouche+Mourad+Alger&output=embed",
+  hub_working_days: [
+    { day: "Dimanche", openTime: "08:30", closeTime: "17:00" },
+    { day: "Lundi", openTime: "08:30", closeTime: "17:00" },
+    { day: "Mardi", openTime: "08:30", closeTime: "17:00" },
+    { day: "Mercredi", openTime: "08:30", closeTime: "17:00" },
+    { day: "Jeudi", openTime: "08:30", closeTime: "16:00" },
+  ],
+} as EcoStop;
+
 export default function StopdeskPage({ params }: { params: { urlcode: string } }) {
 
   const urlcode = decodeURIComponent(params.urlcode || "").trim();
@@ -143,6 +183,16 @@ export default function StopdeskPage({ params }: { params: { urlcode: string } }
 
     (async () => {
       setLoading(true);
+
+      // 🔴 Anderson: skip Firestore entirely, use hardcoded data
+      if (urlcode.toUpperCase().startsWith("ANDR")) {
+        if (!alive) return;
+        setStop(ANDERSON_MOCK);
+        setCompany("anderson");
+        setLang(ANDERSON_MOCK.lng === "ar" ? "ar" : "fr");
+        setLoading(false);
+        return;
+      }
 
       // 🔹 Step 1. Try to find stop in Firestore
       const dref = doc(db, "EcoStop", urlcode);

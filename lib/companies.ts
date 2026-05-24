@@ -61,6 +61,15 @@ export const COMPANIES: CompanyTheme[] = [
     soft: "#F0F9FF",
     onPrimary: "#FFFFFF",
   },
+  {
+    id: "anderson",
+    name: "Anderson Logistique E-commerce",
+    logo: "/images/anderson.png",
+    primary: "#DC2626", // red from the logo
+    secondary: "#0A0A0A", // black background
+    soft: "#FEF9C3", // soft yellow tint inspired by the "A" highlight
+    onPrimary: "#FFFFFF",
+  },
 ];
 
 export const getCompany = (id: string): CompanyTheme | undefined => {
