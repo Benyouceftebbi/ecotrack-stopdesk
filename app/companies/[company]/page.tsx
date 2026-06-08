@@ -23,7 +23,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  ArrowLeft,
   ArrowRight,
   MapPin,
   Phone,
@@ -31,20 +30,12 @@ import {
   Loader2,
   Building2,
   Download,
-  FileText,
-  FileSpreadsheet,
   Copy,
   Check,
 } from "lucide-react";
 import { WILAYA_NAMES } from "@/lib/wilayas";
 import { getCompany, COLITRACK } from "@/lib/companies";
 import { DEMO_STOPS_BY_COMPANY } from "@/lib/demoStops";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 type Stop = EcoStop & { id: string; desk_url_code?: string };
 
@@ -125,27 +116,37 @@ export default function CompanyStopdesksPage({
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return stops.filter((s) => {
-      const code =
-        typeof s.code_wilaya === "string"
-          ? Number(s.code_wilaya)
-          : (s.code_wilaya as number | undefined);
+    const getCode = (s: Stop) =>
+      typeof s.code_wilaya === "string"
+        ? Number(s.code_wilaya)
+        : (s.code_wilaya as number | undefined);
 
-      if (wilaya !== "all" && String(code) !== wilaya) return false;
+    return stops
+      .filter((s) => {
+        const code = getCode(s);
 
-      if (!q) return true;
-      const haystack = [
-        s.name,
-        s.adresse,
-        s.commune,
-        s.wilaya,
-        code ? WILAYA_NAMES[code] : "",
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-      return haystack.includes(q);
-    });
+        if (wilaya !== "all" && String(code) !== wilaya) return false;
+
+        if (!q) return true;
+        const haystack = [
+          s.name,
+          s.adresse,
+          s.commune,
+          s.wilaya,
+          code ? WILAYA_NAMES[code] : "",
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        return haystack.includes(q);
+      })
+      .sort((a, b) => {
+        // Order incrementally by wilaya number, then by name within a wilaya.
+        const ca = getCode(a) ?? Number.MAX_SAFE_INTEGER;
+        const cb = getCode(b) ?? Number.MAX_SAFE_INTEGER;
+        if (ca !== cb) return ca - cb;
+        return (a.name || "").localeCompare(b.name || "");
+      });
   }, [stops, search, wilaya]);
 
   const buildRows = (items: Stop[]) =>
@@ -154,12 +155,23 @@ export default function CompanyStopdesksPage({
         typeof s.code_wilaya === "string"
           ? Number(s.code_wilaya)
           : (s.code_wilaya as number | undefined);
+      const wilayaLabel = code
+        ? `${String(code).padStart(2, "0")} - ${WILAYA_NAMES[code] || ""}`
+        : s.wilaya || "";
+      const mapsUrl =
+        s.map ||
+        `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+          [s.name, s.adresse, s.commune, WILAYA_NAMES[code as number], "Algeria"]
+            .filter(Boolean)
+            .join(", ")
+        )}`;
       return {
         Nom: s.name || "",
-        Wilaya: code ? `${String(code).padStart(2, "0")} - ${WILAYA_NAMES[code] || ""}` : s.wilaya || "",
+        Wilaya: wilayaLabel,
         Commune: s.commune || "",
         Adresse: s.adresse || "",
         Telephone: s.phone || "",
+        Maps: mapsUrl,
         Lien: `${typeof window !== "undefined" ? window.location.origin : ""}/${s.desk_url_code || s.id}`,
       };
     });
@@ -181,62 +193,156 @@ export default function CompanyStopdesksPage({
     XLSX.writeFile(wb, `stopdesks-${company.id}.xlsx`);
   };
 
-  const hexToRgb = (hex: string): [number, number, number] => {
-    const h = hex.replace("#", "");
-    const full =
-      h.length === 3
-        ? h
-            .split("")
-            .map((c) => c + c)
-            .join("")
-        : h;
-    const num = parseInt(full || "000000", 16);
-    return [(num >> 16) & 255, (num >> 8) & 255, num & 255];
-  };
-
   const handleExportPdf = async () => {
     try {
-      const { jsPDF } = await import("jspdf");
-      const autoTableModule = await import("jspdf-autotable");
-      const autoTable = autoTableModule.default;
+      // pdfmake has first-class table support and generates a clean blob,
+      // which we can deliver in a way that also works inside a sandboxed iframe.
+      const pdfMakeModule = await import("pdfmake/build/pdfmake");
+      const pdfFontsModule = await import("pdfmake/build/vfs_fonts");
+
+      const pdfMake: any = (pdfMakeModule as any).default ?? pdfMakeModule;
+      const fontsAny = pdfFontsModule as any;
+      // pdfmake 0.3.x exposes the font files as the module export itself
+      // (default export is the vfs map of *.ttf -> base64).
+      const vfs = { ...(fontsAny.default ?? fontsAny) };
+
+      // Load the Amiri font (covers Latin + Arabic with proper RTL shaping)
+      // and add it to the virtual file system so the PDF can render Arabic.
+      const toBase64 = async (path: string) => {
+        const buf = await (await fetch(path)).arrayBuffer();
+        let binary = "";
+        const bytes = new Uint8Array(buf);
+        const chunk = 0x8000;
+        for (let i = 0; i < bytes.length; i += chunk) {
+          binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+        }
+        return btoa(binary);
+      };
+      const [amiriRegular, amiriBold] = await Promise.all([
+        toBase64("/fonts/Amiri-Regular.ttf"),
+        toBase64("/fonts/Amiri-Bold.ttf"),
+      ]);
+      vfs["Amiri-Regular.ttf"] = amiriRegular;
+      vfs["Amiri-Bold.ttf"] = amiriBold;
+
+      // 0.3.x requires registering the virtual file system via this method
+      // (assigning `.vfs` directly does not work and makes getBlob hang).
+      if (typeof pdfMake.addVirtualFileSystem === "function") {
+        pdfMake.addVirtualFileSystem(vfs);
+      } else {
+        pdfMake.vfs = vfs;
+      }
+
+      // Register Amiri as a usable font family.
+      pdfMake.fonts = {
+        ...(pdfMake.fonts || {}),
+        Amiri: {
+          normal: "Amiri-Regular.ttf",
+          bold: "Amiri-Bold.ttf",
+          italics: "Amiri-Regular.ttf",
+          bolditalics: "Amiri-Bold.ttf",
+        },
+      };
+
+      // Helper: detect Arabic so we can right-align those cells.
+      const hasArabic = (s?: string) => !!s && /[\u0600-\u06FF]/.test(s);
+
       const rows = buildRows(filtered);
-      const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
 
-      const primaryRgb = hexToRgb(company.primary);
+      const tableBody = [
+        // Header row
+        ["Nom", "Wilaya", "Commune", "Adresse", "Téléphone", "Carte"].map((h) => ({
+          text: h,
+          bold: true,
+          color: "#FFFFFF",
+          fillColor: company.primary,
+          margin: [0, 4, 0, 4],
+        })),
+        // Data rows
+        ...rows.map((r, i) => {
+          const fill = i % 2 === 0 ? "#F8FAFC" : "#FFFFFF";
+          const textCells = [r.Nom, r.Wilaya, r.Commune, r.Adresse, r.Telephone].map(
+            (cell) => ({
+              text: cell ?? "",
+              fillColor: fill,
+              margin: [0, 3, 0, 3],
+              color: "#28282A",
+              alignment: hasArabic(cell) ? "right" : "left",
+            })
+          );
+          // Clickable Google Maps link cell
+          const mapsCell = {
+            text: r.Maps ? "Voir sur la carte" : "",
+            link: r.Maps || undefined,
+            color: "#2563EB",
+            decoration: "underline",
+            fillColor: fill,
+            margin: [0, 3, 0, 3],
+          };
+          return [...textCells, mapsCell];
+        }),
+      ];
 
-      doc.setFontSize(16);
-      doc.setTextColor(primaryRgb[0], primaryRgb[1], primaryRgb[2]);
-      doc.text(`${company.name} - Stopdesks en Algerie`, 40, 40);
-      doc.setFontSize(10);
-      doc.setTextColor(100, 100, 100);
-      doc.text(
-        `${rows.length} point(s) - Genere par Colitrack - ${new Date().toLocaleDateString("fr-FR")}`,
-        40,
-        58
-      );
+      const docDefinition: any = {
+        pageOrientation: "landscape",
+        pageSize: "A4",
+        pageMargins: [28, 28, 28, 28],
+        content: [
+          {
+            text: `${company.name} — Stopdesks en Algérie`,
+            fontSize: 16,
+            bold: true,
+            color: company.primary,
+            margin: [0, 0, 0, 4],
+          },
+          {
+            text: `${rows.length} point(s) · Généré par Colitrack · ${new Date().toLocaleDateString(
+              "fr-FR"
+            )}`,
+            fontSize: 9,
+            color: "#64748B",
+            margin: [0, 0, 0, 12],
+          },
+          {
+            table: {
+              headerRows: 1,
+              widths: ["16%", "13%", "13%", "31%", "13%", "14%"],
+              body: tableBody,
+            },
+            layout: {
+              hLineWidth: () => 0.5,
+              vLineWidth: () => 0.5,
+              hLineColor: () => "#E2E8F0",
+              vLineColor: () => "#E2E8F0",
+              paddingLeft: () => 6,
+              paddingRight: () => 6,
+            },
+          },
+        ],
+        defaultStyle: { fontSize: 9, font: "Amiri" },
+      };
 
-      autoTable(doc, {
-        startY: 78,
-        head: [["Nom", "Wilaya", "Commune", "Adresse", "Telephone"]],
-        body: rows.map((r) => [r.Nom, r.Wilaya, r.Commune, r.Adresse, r.Telephone]),
-        styles: { fontSize: 9, cellPadding: 6, overflow: "linebreak" },
-        headStyles: {
-          fillColor: primaryRgb,
-          textColor: [255, 255, 255],
-          fontStyle: "bold",
-        },
-        alternateRowStyles: { fillColor: [248, 250, 252] },
-        columnStyles: {
-          0: { cellWidth: 150 },
-          1: { cellWidth: 110 },
-          2: { cellWidth: 110 },
-          3: { cellWidth: 250 },
-          4: { cellWidth: 90 },
-        },
-        margin: { left: 40, right: 40 },
-      });
+      const fileName = `stopdesks-${company.id}.pdf`;
+      const inIframe =
+        typeof window !== "undefined" && window.self !== window.top;
 
-      doc.save(`stopdesks-${company.id}.pdf`);
+      // pdfmake 0.3.x: getBlob() is async and returns a Promise<Blob>
+      // (it no longer accepts a callback).
+      const blob: Blob = await pdfMake.createPdf(docDefinition).getBlob();
+      const url = URL.createObjectURL(blob);
+      if (inIframe) {
+        // Inside a sandboxed iframe, a normal download is blocked, so open
+        // the generated PDF in a new top-level tab instead.
+        window.open(url, "_blank");
+      } else {
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
     } catch (err) {
       console.error("[v0] PDF export failed", err);
       alert("Échec de l'export PDF. Veuillez réessayer.");
@@ -252,15 +358,7 @@ export default function CompanyStopdesksPage({
           background: `linear-gradient(135deg, ${company.primary} 0%, ${company.secondary} 100%)`,
         }}
       >
-        <div className="container mx-auto px-4 py-5 flex items-center justify-between">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-white/90 hover:text-white text-sm font-medium"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Retour
-          </Link>
-
+        <div className="container mx-auto px-4 py-5 flex items-center justify-end">
           <div className="flex items-center gap-2">
             <div
               className="w-7 h-7 rounded-md flex items-center justify-center text-white font-bold text-sm"
@@ -286,11 +384,8 @@ export default function CompanyStopdesksPage({
               />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-white/80 text-xs sm:text-sm font-medium uppercase tracking-wider">
-                Stopdesks
-              </p>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight break-words">
-                {company.name}
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight break-words text-white">
+                Stopdesks {company.name}
               </h1>
               <p className="text-white/85 mt-1 text-xs sm:text-sm">
                 {loading
@@ -330,29 +425,16 @@ export default function CompanyStopdesksPage({
           <div className="text-sm text-slate-500 md:ml-2 md:whitespace-nowrap">
             {filtered.length} résultat{filtered.length > 1 ? "s" : ""}
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                size="sm"
-                disabled={loading || filtered.length === 0}
-                className="md:ml-auto text-white hover:opacity-90"
-                style={{ backgroundColor: company.primary }}
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Exporter
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={handleExportExcel} className="cursor-pointer">
-                <FileSpreadsheet className="h-4 w-4 mr-2 text-emerald-600" />
-                Excel (.xlsx)
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleExportPdf} className="cursor-pointer">
-                <FileText className="h-4 w-4 mr-2 text-rose-600" />
-                PDF
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Button
+            size="sm"
+            onClick={handleExportPdf}
+            disabled={loading || filtered.length === 0}
+            className="md:ml-auto text-white hover:opacity-90"
+            style={{ backgroundColor: company.primary }}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Exporter
+          </Button>
         </div>
       </div>
 
