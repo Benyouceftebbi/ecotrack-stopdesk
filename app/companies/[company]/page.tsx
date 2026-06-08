@@ -117,27 +117,37 @@ export default function CompanyStopdesksPage({
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return stops.filter((s) => {
-      const code =
-        typeof s.code_wilaya === "string"
-          ? Number(s.code_wilaya)
-          : (s.code_wilaya as number | undefined);
+    const getCode = (s: Stop) =>
+      typeof s.code_wilaya === "string"
+        ? Number(s.code_wilaya)
+        : (s.code_wilaya as number | undefined);
 
-      if (wilaya !== "all" && String(code) !== wilaya) return false;
+    return stops
+      .filter((s) => {
+        const code = getCode(s);
 
-      if (!q) return true;
-      const haystack = [
-        s.name,
-        s.adresse,
-        s.commune,
-        s.wilaya,
-        code ? WILAYA_NAMES[code] : "",
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-      return haystack.includes(q);
-    });
+        if (wilaya !== "all" && String(code) !== wilaya) return false;
+
+        if (!q) return true;
+        const haystack = [
+          s.name,
+          s.adresse,
+          s.commune,
+          s.wilaya,
+          code ? WILAYA_NAMES[code] : "",
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        return haystack.includes(q);
+      })
+      .sort((a, b) => {
+        // Order incrementally by wilaya number, then by name within a wilaya.
+        const ca = getCode(a) ?? Number.MAX_SAFE_INTEGER;
+        const cb = getCode(b) ?? Number.MAX_SAFE_INTEGER;
+        if (ca !== cb) return ca - cb;
+        return (a.name || "").localeCompare(b.name || "");
+      });
   }, [stops, search, wilaya]);
 
   const buildRows = (items: Stop[]) =>
