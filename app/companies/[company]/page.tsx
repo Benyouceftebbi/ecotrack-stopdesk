@@ -197,7 +197,7 @@ export default function CompanyStopdesksPage({
   const handleExportPdf = async () => {
     try {
       const { jsPDF } = await import("jspdf");
-      await import("jspdf-autotable");
+      const autoTable = (await import("jspdf-autotable")).default;
       const rows = buildRows(filtered);
       const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
 
@@ -215,7 +215,7 @@ export default function CompanyStopdesksPage({
         22
       );
 
-      (doc as any).autoTable({
+      autoTable(doc, {
         startY: 28,
         head: [["Nom", "Wilaya", "Commune", "Adresse", "Telephone"]],
         body: rows.map((r) => [r.Nom, r.Wilaya, r.Commune, r.Adresse, r.Telephone]),
