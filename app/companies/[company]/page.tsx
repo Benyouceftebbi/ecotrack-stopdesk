@@ -181,12 +181,18 @@ export default function CompanyStopdesksPage({
       const pdfFontsModule = await import("pdfmake/build/vfs_fonts");
 
       const pdfMake: any = (pdfMakeModule as any).default ?? pdfMakeModule;
-      const vfs =
-        (pdfFontsModule as any).default?.pdfMake?.vfs ??
-        (pdfFontsModule as any).pdfMake?.vfs ??
-        (pdfFontsModule as any).default?.vfs ??
-        (pdfFontsModule as any).vfs;
-      if (vfs) pdfMake.vfs = vfs;
+      const fontsAny = pdfFontsModule as any;
+      // pdfmake 0.3.x exposes the font files as the module export itself
+      // (default export is the vfs map of *.ttf -> base64).
+      const vfs = fontsAny.default ?? fontsAny;
+
+      // 0.3.x requires registering the virtual file system via this method
+      // (assigning `.vfs` directly does not work and makes getBlob hang).
+      if (typeof pdfMake.addVirtualFileSystem === "function") {
+        pdfMake.addVirtualFileSystem(vfs);
+      } else {
+        pdfMake.vfs = vfs;
+      }
 
       const rows = buildRows(filtered);
 
@@ -256,22 +262,23 @@ export default function CompanyStopdesksPage({
       const inIframe =
         typeof window !== "undefined" && window.self !== window.top;
 
-      pdfMake.createPdf(docDefinition).getBlob((blob: Blob) => {
-        const url = URL.createObjectURL(blob);
-        if (inIframe) {
-          // Inside a sandboxed iframe, a normal download is blocked, so open
-          // the generated PDF in a new top-level tab instead.
-          window.open(url, "_blank");
-        } else {
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = fileName;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-        }
-        setTimeout(() => URL.revokeObjectURL(url), 10000);
-      });
+      // pdfmake 0.3.x: getBlob() is async and returns a Promise<Blob>
+      // (it no longer accepts a callback).
+      const blob: Blob = await pdfMake.createPdf(docDefinition).getBlob();
+      const url = URL.createObjectURL(blob);
+      if (inIframe) {
+        // Inside a sandboxed iframe, a normal download is blocked, so open
+        // the generated PDF in a new top-level tab instead.
+        window.open(url, "_blank");
+      } else {
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
     } catch (err) {
       console.error("[v0] PDF export failed", err);
       alert("Échec de l'export PDF. Veuillez réessayer.");
