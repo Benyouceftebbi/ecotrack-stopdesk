@@ -31,20 +31,12 @@ import {
   Loader2,
   Building2,
   Download,
-  FileText,
-  FileSpreadsheet,
   Copy,
   Check,
 } from "lucide-react";
 import { WILAYA_NAMES } from "@/lib/wilayas";
 import { getCompany, COLITRACK } from "@/lib/companies";
 import { DEMO_STOPS_BY_COMPANY } from "@/lib/demoStops";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 type Stop = EcoStop & { id: string; desk_url_code?: string };
 
@@ -373,29 +365,16 @@ export default function CompanyStopdesksPage({
           <div className="text-sm text-slate-500 md:ml-2 md:whitespace-nowrap">
             {filtered.length} résultat{filtered.length > 1 ? "s" : ""}
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                size="sm"
-                disabled={loading || filtered.length === 0}
-                className="md:ml-auto text-white hover:opacity-90"
-                style={{ backgroundColor: company.primary }}
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Exporter
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={handleExportExcel} className="cursor-pointer">
-                <FileSpreadsheet className="h-4 w-4 mr-2 text-emerald-600" />
-                Excel (.xlsx)
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleExportPdf} className="cursor-pointer">
-                <FileText className="h-4 w-4 mr-2 text-rose-600" />
-                PDF
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Button
+            size="sm"
+            onClick={handleExportPdf}
+            disabled={loading || filtered.length === 0}
+            className="md:ml-auto text-white hover:opacity-90"
+            style={{ backgroundColor: company.primary }}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Exporter
+          </Button>
         </div>
       </div>
 
