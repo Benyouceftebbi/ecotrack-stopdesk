@@ -204,7 +204,26 @@ export default function CompanyStopdesksPage({
       const fontsAny = pdfFontsModule as any;
       // pdfmake 0.3.x exposes the font files as the module export itself
       // (default export is the vfs map of *.ttf -> base64).
-      const vfs = fontsAny.default ?? fontsAny;
+      const vfs = { ...(fontsAny.default ?? fontsAny) };
+
+      // Load the Amiri font (covers Latin + Arabic with proper RTL shaping)
+      // and add it to the virtual file system so the PDF can render Arabic.
+      const toBase64 = async (path: string) => {
+        const buf = await (await fetch(path)).arrayBuffer();
+        let binary = "";
+        const bytes = new Uint8Array(buf);
+        const chunk = 0x8000;
+        for (let i = 0; i < bytes.length; i += chunk) {
+          binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+        }
+        return btoa(binary);
+      };
+      const [amiriRegular, amiriBold] = await Promise.all([
+        toBase64("/fonts/Amiri-Regular.ttf"),
+        toBase64("/fonts/Amiri-Bold.ttf"),
+      ]);
+      vfs["Amiri-Regular.ttf"] = amiriRegular;
+      vfs["Amiri-Bold.ttf"] = amiriBold;
 
       // 0.3.x requires registering the virtual file system via this method
       // (assigning `.vfs` directly does not work and makes getBlob hang).
@@ -213,6 +232,20 @@ export default function CompanyStopdesksPage({
       } else {
         pdfMake.vfs = vfs;
       }
+
+      // Register Amiri as a usable font family.
+      pdfMake.fonts = {
+        ...(pdfMake.fonts || {}),
+        Amiri: {
+          normal: "Amiri-Regular.ttf",
+          bold: "Amiri-Bold.ttf",
+          italics: "Amiri-Regular.ttf",
+          bolditalics: "Amiri-Bold.ttf",
+        },
+      };
+
+      // Helper: detect Arabic so we can right-align those cells.
+      const hasArabic = (s?: string) => !!s && /[\u0600-\u06FF]/.test(s);
 
       const rows = buildRows(filtered);
 
@@ -234,6 +267,7 @@ export default function CompanyStopdesksPage({
               fillColor: fill,
               margin: [0, 3, 0, 3],
               color: "#28282A",
+              alignment: hasArabic(cell) ? "right" : "left",
             })
           );
           // Clickable Google Maps link cell
@@ -285,7 +319,7 @@ export default function CompanyStopdesksPage({
             },
           },
         ],
-        defaultStyle: { fontSize: 9 },
+        defaultStyle: { fontSize: 9, font: "Amiri" },
       };
 
       const fileName = `stopdesks-${company.id}.pdf`;
