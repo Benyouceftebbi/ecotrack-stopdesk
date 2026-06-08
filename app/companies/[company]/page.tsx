@@ -251,7 +251,7 @@ export default function CompanyStopdesksPage({
 
       const tableBody = [
         // Header row
-        ["Nom", "Wilaya", "Commune", "Adresse", "Téléphone", "Carte"].map((h) => ({
+        ["Wilaya", "Commune", "Adresse", "Téléphone", "Carte"].map((h) => ({
           text: h,
           bold: true,
           color: "#FFFFFF",
@@ -261,7 +261,7 @@ export default function CompanyStopdesksPage({
         // Data rows
         ...rows.map((r, i) => {
           const fill = i % 2 === 0 ? "#F8FAFC" : "#FFFFFF";
-          const textCells = [r.Nom, r.Wilaya, r.Commune, r.Adresse, r.Telephone].map(
+          const textCells = [r.Wilaya, r.Commune, r.Adresse, r.Telephone].map(
             (cell) => ({
               text: cell ?? "",
               fillColor: fill,
@@ -306,7 +306,7 @@ export default function CompanyStopdesksPage({
           {
             table: {
               headerRows: 1,
-              widths: ["16%", "13%", "13%", "31%", "13%", "14%"],
+              widths: ["16%", "16%", "37%", "15%", "16%"],
               body: tableBody,
             },
             layout: {
