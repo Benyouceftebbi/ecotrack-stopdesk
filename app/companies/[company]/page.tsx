@@ -23,7 +23,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  ArrowLeft,
   ArrowRight,
   MapPin,
   Phone,
@@ -325,15 +324,7 @@ export default function CompanyStopdesksPage({
           background: `linear-gradient(135deg, ${company.primary} 0%, ${company.secondary} 100%)`,
         }}
       >
-        <div className="container mx-auto px-4 py-5 flex items-center justify-between">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-white/90 hover:text-white text-sm font-medium"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Retour
-          </Link>
-
+        <div className="container mx-auto px-4 py-5 flex items-center justify-end">
           <div className="flex items-center gap-2">
             <div
               className="w-7 h-7 rounded-md flex items-center justify-center text-white font-bold text-sm"
@@ -359,11 +350,8 @@ export default function CompanyStopdesksPage({
               />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-white/80 text-xs sm:text-sm font-medium uppercase tracking-wider">
-                Stopdesks
-              </p>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight break-words">
-                {company.name}
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight break-words text-white">
+                Stopdesks {company.name}
               </h1>
               <p className="text-white/85 mt-1 text-xs sm:text-sm">
                 {loading
