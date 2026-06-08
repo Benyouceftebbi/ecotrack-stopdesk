@@ -181,92 +181,105 @@ export default function CompanyStopdesksPage({
     XLSX.writeFile(wb, `stopdesks-${company.id}.xlsx`);
   };
 
-  const hexToRgb = (hex: string): [number, number, number] => {
-    const h = hex.replace("#", "");
-    const full =
-      h.length === 3
-        ? h
-            .split("")
-            .map((c) => c + c)
-            .join("")
-        : h;
-    const num = parseInt(full || "000000", 16);
-    return [(num >> 16) & 255, (num >> 8) & 255, num & 255];
-  };
-
   const handleExportPdf = async () => {
     try {
-      const { jsPDF } = await import("jspdf");
-      const autoTable = (await import("jspdf-autotable")).default;
+      // pdfmake has first-class table support and generates a clean blob,
+      // which we can deliver in a way that also works inside a sandboxed iframe.
+      const pdfMakeModule = await import("pdfmake/build/pdfmake");
+      const pdfFontsModule = await import("pdfmake/build/vfs_fonts");
+
+      const pdfMake: any = (pdfMakeModule as any).default ?? pdfMakeModule;
+      const vfs =
+        (pdfFontsModule as any).default?.pdfMake?.vfs ??
+        (pdfFontsModule as any).pdfMake?.vfs ??
+        (pdfFontsModule as any).default?.vfs ??
+        (pdfFontsModule as any).vfs;
+      if (vfs) pdfMake.vfs = vfs;
+
       const rows = buildRows(filtered);
-      const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
 
-      const primaryRgb = hexToRgb(company.primary);
+      const tableBody = [
+        // Header row
+        ["Nom", "Wilaya", "Commune", "Adresse", "Téléphone"].map((h) => ({
+          text: h,
+          bold: true,
+          color: "#FFFFFF",
+          fillColor: company.primary,
+          margin: [0, 4, 0, 4],
+        })),
+        // Data rows
+        ...rows.map((r, i) => {
+          const fill = i % 2 === 0 ? "#F8FAFC" : "#FFFFFF";
+          return [r.Nom, r.Wilaya, r.Commune, r.Adresse, r.Telephone].map(
+            (cell) => ({
+              text: cell ?? "",
+              fillColor: fill,
+              margin: [0, 3, 0, 3],
+              color: "#28282A",
+            })
+          );
+        }),
+      ];
 
-      doc.setFontSize(16);
-      doc.setTextColor(primaryRgb[0], primaryRgb[1], primaryRgb[2]);
-      doc.text(`${company.name} - Stopdesks en Algerie`, 14, 15);
-      
-      doc.setFontSize(10);
-      doc.setTextColor(100, 100, 100);
-      doc.text(
-        `${rows.length} point(s) - Genere par Colitrack - ${new Date().toLocaleDateString("fr-FR")}`,
-        14,
-        22
-      );
+      const docDefinition: any = {
+        pageOrientation: "landscape",
+        pageSize: "A4",
+        pageMargins: [28, 28, 28, 28],
+        content: [
+          {
+            text: `${company.name} — Stopdesks en Algérie`,
+            fontSize: 16,
+            bold: true,
+            color: company.primary,
+            margin: [0, 0, 0, 4],
+          },
+          {
+            text: `${rows.length} point(s) · Généré par Colitrack · ${new Date().toLocaleDateString(
+              "fr-FR"
+            )}`,
+            fontSize: 9,
+            color: "#64748B",
+            margin: [0, 0, 0, 12],
+          },
+          {
+            table: {
+              headerRows: 1,
+              widths: ["18%", "14%", "14%", "39%", "15%"],
+              body: tableBody,
+            },
+            layout: {
+              hLineWidth: () => 0.5,
+              vLineWidth: () => 0.5,
+              hLineColor: () => "#E2E8F0",
+              vLineColor: () => "#E2E8F0",
+              paddingLeft: () => 6,
+              paddingRight: () => 6,
+            },
+          },
+        ],
+        defaultStyle: { fontSize: 9 },
+      };
 
-      autoTable(doc, {
-        startY: 28,
-        head: [["Nom", "Wilaya", "Commune", "Adresse", "Telephone"]],
-        body: rows.map((r) => [r.Nom, r.Wilaya, r.Commune, r.Adresse, r.Telephone]),
-        styles: { 
-          fontSize: 9, 
-          cellPadding: 3, 
-          overflow: "linebreak",
-          textColor: [40, 40, 40],
-        },
-        headStyles: {
-          fillColor: primaryRgb,
-          textColor: [255, 255, 255],
-          fontStyle: "bold",
-          fontSize: 10,
-        },
-        alternateRowStyles: { 
-          fillColor: [248, 250, 252] 
-        },
-        columnStyles: {
-          0: { cellWidth: 40 },
-          1: { cellWidth: 30 },
-          2: { cellWidth: 30 },
-          3: { cellWidth: 60 },
-          4: { cellWidth: 30 },
-        },
-        margin: { left: 10, right: 10, top: 10 },
-      });
-
-      // Generate the PDF as a blob and trigger a download in a way that works
-      // even when the app is running inside a sandboxed preview iframe.
-      const blob = doc.output("blob");
-      const url = URL.createObjectURL(blob);
       const fileName = `stopdesks-${company.id}.pdf`;
+      const inIframe =
+        typeof window !== "undefined" && window.self !== window.top;
 
-      const inIframe = typeof window !== "undefined" && window.self !== window.top;
-
-      if (inIframe) {
-        // Inside an iframe a normal anchor download is often blocked, so open
-        // the generated PDF in a new top-level tab instead.
-        window.open(url, "_blank");
-      } else {
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      }
-
-      // Revoke after a short delay so the download/new tab has time to read it.
-      setTimeout(() => URL.revokeObjectURL(url), 10000);
+      pdfMake.createPdf(docDefinition).getBlob((blob: Blob) => {
+        const url = URL.createObjectURL(blob);
+        if (inIframe) {
+          // Inside a sandboxed iframe, a normal download is blocked, so open
+          // the generated PDF in a new top-level tab instead.
+          window.open(url, "_blank");
+        } else {
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        }
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+      });
     } catch (err) {
       console.error("[v0] PDF export failed", err);
       alert("Échec de l'export PDF. Veuillez réessayer.");
