@@ -146,12 +146,23 @@ export default function CompanyStopdesksPage({
         typeof s.code_wilaya === "string"
           ? Number(s.code_wilaya)
           : (s.code_wilaya as number | undefined);
+      const wilayaLabel = code
+        ? `${String(code).padStart(2, "0")} - ${WILAYA_NAMES[code] || ""}`
+        : s.wilaya || "";
+      const mapsUrl =
+        s.map ||
+        `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+          [s.name, s.adresse, s.commune, WILAYA_NAMES[code as number], "Algeria"]
+            .filter(Boolean)
+            .join(", ")
+        )}`;
       return {
         Nom: s.name || "",
-        Wilaya: code ? `${String(code).padStart(2, "0")} - ${WILAYA_NAMES[code] || ""}` : s.wilaya || "",
+        Wilaya: wilayaLabel,
         Commune: s.commune || "",
         Adresse: s.adresse || "",
         Telephone: s.phone || "",
+        Maps: mapsUrl,
         Lien: `${typeof window !== "undefined" ? window.location.origin : ""}/${s.desk_url_code || s.id}`,
       };
     });
@@ -198,7 +209,7 @@ export default function CompanyStopdesksPage({
 
       const tableBody = [
         // Header row
-        ["Nom", "Wilaya", "Commune", "Adresse", "Téléphone"].map((h) => ({
+        ["Nom", "Wilaya", "Commune", "Adresse", "Téléphone", "Carte"].map((h) => ({
           text: h,
           bold: true,
           color: "#FFFFFF",
@@ -208,7 +219,7 @@ export default function CompanyStopdesksPage({
         // Data rows
         ...rows.map((r, i) => {
           const fill = i % 2 === 0 ? "#F8FAFC" : "#FFFFFF";
-          return [r.Nom, r.Wilaya, r.Commune, r.Adresse, r.Telephone].map(
+          const textCells = [r.Nom, r.Wilaya, r.Commune, r.Adresse, r.Telephone].map(
             (cell) => ({
               text: cell ?? "",
               fillColor: fill,
@@ -216,6 +227,16 @@ export default function CompanyStopdesksPage({
               color: "#28282A",
             })
           );
+          // Clickable Google Maps link cell
+          const mapsCell = {
+            text: r.Maps ? "Voir sur la carte" : "",
+            link: r.Maps || undefined,
+            color: "#2563EB",
+            decoration: "underline",
+            fillColor: fill,
+            margin: [0, 3, 0, 3],
+          };
+          return [...textCells, mapsCell];
         }),
       ];
 
@@ -242,7 +263,7 @@ export default function CompanyStopdesksPage({
           {
             table: {
               headerRows: 1,
-              widths: ["18%", "14%", "14%", "39%", "15%"],
+              widths: ["16%", "13%", "13%", "31%", "13%", "14%"],
               body: tableBody,
             },
             layout: {
