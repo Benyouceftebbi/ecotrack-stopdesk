@@ -244,7 +244,29 @@ export default function CompanyStopdesksPage({
         margin: { left: 10, right: 10, top: 10 },
       });
 
-      doc.save(`stopdesks-${company.id}.pdf`);
+      // Generate the PDF as a blob and trigger a download in a way that works
+      // even when the app is running inside a sandboxed preview iframe.
+      const blob = doc.output("blob");
+      const url = URL.createObjectURL(blob);
+      const fileName = `stopdesks-${company.id}.pdf`;
+
+      const inIframe = typeof window !== "undefined" && window.self !== window.top;
+
+      if (inIframe) {
+        // Inside an iframe a normal anchor download is often blocked, so open
+        // the generated PDF in a new top-level tab instead.
+        window.open(url, "_blank");
+      } else {
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+
+      // Revoke after a short delay so the download/new tab has time to read it.
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
     } catch (err) {
       console.error("[v0] PDF export failed", err);
       alert("Échec de l'export PDF. Veuillez réessayer.");
