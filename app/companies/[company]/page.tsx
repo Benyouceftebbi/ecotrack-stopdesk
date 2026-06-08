@@ -197,43 +197,51 @@ export default function CompanyStopdesksPage({
   const handleExportPdf = async () => {
     try {
       const { jsPDF } = await import("jspdf");
-      const autoTableModule = await import("jspdf-autotable");
-      const autoTable = autoTableModule.default;
+      await import("jspdf-autotable");
       const rows = buildRows(filtered);
-      const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+      const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
 
       const primaryRgb = hexToRgb(company.primary);
 
       doc.setFontSize(16);
       doc.setTextColor(primaryRgb[0], primaryRgb[1], primaryRgb[2]);
-      doc.text(`${company.name} - Stopdesks en Algerie`, 40, 40);
+      doc.text(`${company.name} - Stopdesks en Algerie`, 14, 15);
+      
       doc.setFontSize(10);
       doc.setTextColor(100, 100, 100);
       doc.text(
         `${rows.length} point(s) - Genere par Colitrack - ${new Date().toLocaleDateString("fr-FR")}`,
-        40,
-        58
+        14,
+        22
       );
 
-      autoTable(doc, {
-        startY: 78,
+      (doc as any).autoTable({
+        startY: 28,
         head: [["Nom", "Wilaya", "Commune", "Adresse", "Telephone"]],
         body: rows.map((r) => [r.Nom, r.Wilaya, r.Commune, r.Adresse, r.Telephone]),
-        styles: { fontSize: 9, cellPadding: 6, overflow: "linebreak" },
+        styles: { 
+          fontSize: 9, 
+          cellPadding: 3, 
+          overflow: "linebreak",
+          textColor: [40, 40, 40],
+        },
         headStyles: {
           fillColor: primaryRgb,
           textColor: [255, 255, 255],
           fontStyle: "bold",
+          fontSize: 10,
         },
-        alternateRowStyles: { fillColor: [248, 250, 252] },
+        alternateRowStyles: { 
+          fillColor: [248, 250, 252] 
+        },
         columnStyles: {
-          0: { cellWidth: 150 },
-          1: { cellWidth: 110 },
-          2: { cellWidth: 110 },
-          3: { cellWidth: 250 },
-          4: { cellWidth: 90 },
+          0: { cellWidth: 40 },
+          1: { cellWidth: 30 },
+          2: { cellWidth: 30 },
+          3: { cellWidth: 60 },
+          4: { cellWidth: 30 },
         },
-        margin: { left: 40, right: 40 },
+        margin: { left: 10, right: 10, top: 10 },
       });
 
       doc.save(`stopdesks-${company.id}.pdf`);
