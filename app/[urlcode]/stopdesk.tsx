@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, Phone, Clock, Package, Navigation } from "lucide-react";
 import Image from "next/image";
 import { WILAYA_NAMES } from "@/lib/wilayas";
+import { findDemoStop } from "@/lib/demoStops";
 
 type Language = "fr" | "ar";
 
@@ -127,6 +128,22 @@ const getTheme = (companyName?: string): StopdeskTheme => {
     };
   }
 
+  // 🔵🔴 imir Logistics: navy blue primary, red accent
+  if (name === "imir" || name === "imir logistics") {
+    return {
+      bgGradient: "from-[#EEF2F9] to-white",
+      primaryText: "text-[#1F3A6E]",
+      secondaryText: "text-[#C0202F]",
+      mutedText: "text-gray-600",
+      cardAccentBg: "bg-[#EEF2F9]",
+      iconCircleBg: "bg-[#1F3A6E]",
+      phoneText: "text-[#C0202F] hover:text-red-700",
+      buttonBg: "bg-[#1F3A6E]",
+      buttonHoverBg: "hover:bg-[#16294f]",
+      footerBg: "bg-[#1F3A6E]",
+    };
+  }
+
   // ✅ Default theme (your original)
   return {
     bgGradient: "from-blue-50 to-white",
@@ -209,6 +226,12 @@ export default function StopdeskPage({ params }: { params: { urlcode: string } }
         const [r1, r2] = await Promise.all([getDocs(q1), getDocs(q2)]);
         const m = r1.docs[0] || r2.docs[0];
         if (m) data = (m.data() as EcoStop) ?? null;
+      }
+
+      // 🔹 Step 2. Fall back to hardcoded demo stopdesks (e.g. imir)
+      if (!data) {
+        const demo = findDemoStop(urlcode);
+        if (demo) data = demo as EcoStop;
       }
 
       if (!alive) return;
