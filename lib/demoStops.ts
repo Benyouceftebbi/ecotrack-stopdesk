@@ -165,6 +165,131 @@ export const ANDERSON_DEMO_STOPS: DemoStop[] = [
   },
 ];
 
+/**
+ * Hardcoded demonstration stopdesks for imir Logistics.
+ */
+export const IMIR_DEMO_STOPS: DemoStop[] = [
+  {
+    id: "imir-alger-centre",
+    desk_url_code: "IMIR-ALG-01",
+    name: "imir Alger Centre",
+    phone: "0550 14 25 36",
+    phone2: "0770 14 25 36",
+    code_wilaya: 16,
+    wilaya: "Alger",
+    commune: "Alger Centre",
+    adresse: "23 Boulevard Mohamed V, près de la place Audin, Alger Centre",
+    map: "https://www.google.com/maps/search/?api=1&query=Boulevard+Mohamed+V+Alger",
+    company: "imir",
+  },
+  {
+    id: "imir-hydra",
+    desk_url_code: "IMIR-ALG-02",
+    name: "imir Hydra",
+    phone: "0550 25 36 47",
+    phone2: null,
+    code_wilaya: 16,
+    wilaya: "Alger",
+    commune: "Hydra",
+    adresse: "Rue des Frères Bouadou, à coté du parc Hydra, Hydra",
+    map: "https://www.google.com/maps/search/?api=1&query=Hydra+Alger",
+    company: "imir",
+  },
+  {
+    id: "imir-oran-centre",
+    desk_url_code: "IMIR-ORN-01",
+    name: "imir Oran Centre",
+    phone: "0540 36 47 58",
+    phone2: "0660 36 47 58",
+    code_wilaya: 31,
+    wilaya: "Oran",
+    commune: "Oran",
+    adresse: "Boulevard de la Soummam, en face de la place du 1er Novembre, Oran",
+    map: "https://www.google.com/maps/search/?api=1&query=Boulevard+Soummam+Oran",
+    company: "imir",
+  },
+  {
+    id: "imir-constantine",
+    desk_url_code: "IMIR-CST-01",
+    name: "imir Constantine",
+    phone: "0560 47 58 69",
+    phone2: null,
+    code_wilaya: 25,
+    wilaya: "Constantine",
+    commune: "Constantine",
+    adresse: "Rue Larbi Ben M'hidi, près du pont Sidi Rached, Constantine",
+    map: "https://www.google.com/maps/search/?api=1&query=Sidi+Rached+Constantine",
+    company: "imir",
+  },
+  {
+    id: "imir-setif",
+    desk_url_code: "IMIR-SET-01",
+    name: "imir Sétif",
+    phone: "0550 58 69 70",
+    phone2: null,
+    code_wilaya: 19,
+    wilaya: "Sétif",
+    commune: "Sétif",
+    adresse: "Avenue du 8 Mai 1945, à coté de la gare routière, Sétif",
+    map: "https://www.google.com/maps/search/?api=1&query=8+Mai+1945+Setif",
+    company: "imir",
+  },
+  {
+    id: "imir-annaba",
+    desk_url_code: "IMIR-ANB-01",
+    name: "imir Annaba",
+    phone: "0560 69 70 81",
+    phone2: "0770 69 70 81",
+    code_wilaya: 23,
+    wilaya: "Annaba",
+    commune: "Annaba",
+    adresse: "Boulevard du 1er Novembre, près du port, Annaba",
+    map: "https://www.google.com/maps/search/?api=1&query=1er+Novembre+Annaba",
+    company: "imir",
+  },
+  {
+    id: "imir-blida",
+    desk_url_code: "IMIR-BLD-01",
+    name: "imir Blida",
+    phone: "0550 70 81 92",
+    phone2: null,
+    code_wilaya: 9,
+    wilaya: "Blida",
+    commune: "Blida",
+    adresse: "Rue Tirsatine, en face du marché couvert, Blida",
+    map: "https://www.google.com/maps/search/?api=1&query=Blida+centre",
+    company: "imir",
+  },
+  {
+    id: "imir-tizi-ouzou",
+    desk_url_code: "IMIR-TZO-01",
+    name: "imir Tizi Ouzou",
+    phone: "0550 81 92 03",
+    phone2: null,
+    code_wilaya: 15,
+    wilaya: "Tizi Ouzou",
+    commune: "Tizi Ouzou",
+    adresse: "Boulevard Krim Belkacem, Nouvelle Ville, Tizi Ouzou",
+    map: "https://www.google.com/maps/search/?api=1&query=Krim+Belkacem+Tizi+Ouzou",
+    company: "imir",
+  },
+];
+
 export const DEMO_STOPS_BY_COMPANY: Record<string, DemoStop[]> = {
   anderson: ANDERSON_DEMO_STOPS,
+  imir: IMIR_DEMO_STOPS,
+};
+
+/** Find a single demo stopdesk by its URL code (case-insensitive). */
+export const findDemoStop = (urlcode: string): DemoStop | undefined => {
+  const code = decodeURIComponent(urlcode || "").trim().toLowerCase();
+  if (!code) return undefined;
+  for (const stops of Object.values(DEMO_STOPS_BY_COMPANY)) {
+    const match = stops.find(
+      (s) =>
+        s.desk_url_code?.toLowerCase() === code || s.id.toLowerCase() === code
+    );
+    if (match) return match;
+  }
+  return undefined;
 };

@@ -70,6 +70,15 @@ export const COMPANIES: CompanyTheme[] = [
     soft: "#FEF9C3", // soft yellow tint inspired by the "A" highlight
     onPrimary: "#FFFFFF",
   },
+  {
+    id: "imir",
+    name: "imir Logistics",
+    logo: "/images/imir.png",
+    primary: "#1F3A6E", // navy blue from the "imir" wordmark
+    secondary: "#C0202F", // red from the icon
+    soft: "#EEF2F9", // soft navy tint
+    onPrimary: "#FFFFFF",
+  },
 ];
 
 export const getCompany = (id: string): CompanyTheme | undefined => {
