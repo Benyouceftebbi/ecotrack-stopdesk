@@ -144,6 +144,22 @@ const getTheme = (companyName?: string): StopdeskTheme => {
     };
   }
 
+  // 🔴⚫ RedEx: red primary, black accent
+  if (name === "redex") {
+    return {
+      bgGradient: "from-[#FEF2F2] to-white",
+      primaryText: "text-[#E31E24]",
+      secondaryText: "text-[#111111]",
+      mutedText: "text-gray-600",
+      cardAccentBg: "bg-[#FEF2F2]",
+      iconCircleBg: "bg-[#E31E24]",
+      phoneText: "text-[#E31E24] hover:text-red-700",
+      buttonBg: "bg-[#E31E24]",
+      buttonHoverBg: "hover:bg-red-700",
+      footerBg: "bg-[#111111]",
+    };
+  }
+
   // ✅ Default theme (your original)
   return {
     bgGradient: "from-blue-50 to-white",
