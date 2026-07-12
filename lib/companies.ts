@@ -79,6 +79,15 @@ export const COMPANIES: CompanyTheme[] = [
     soft: "#EEF2F9", // soft navy tint
     onPrimary: "#FFFFFF",
   },
+  {
+    id: "redex",
+    name: "RedEx",
+    logo: "/images/redex.png",
+    primary: "#E31E24", // red from "Red"
+    secondary: "#111111", // black from "Ex"
+    soft: "#FEF2F2", // soft red tint
+    onPrimary: "#FFFFFF",
+  },
 ];
 
 export const getCompany = (id: string): CompanyTheme | undefined => {
