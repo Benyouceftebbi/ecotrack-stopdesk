@@ -1,15 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { use, useEffect, useMemo, useState } from "react";
 import { collection, doc, getDoc, getDocs, limit, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { EcoStop } from "@/types/ecostop";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, Phone, Clock, Package, Navigation } from "lucide-react";
-import Image from "next/image";
 import { WILAYA_NAMES } from "@/lib/wilayas";
-import { findDemoStop } from "@/lib/demoStops";
 
 type Language = "fr" | "ar";
 
@@ -43,7 +41,6 @@ const translations = {
     pickupInstructions: "Instructions de Retrait",
     instruction1: "Présentez une pièce d'identité",
     instruction2: "Montrez ce SMS ou votre numéro de suivi",
-    instruction3:"Si le colis n’est pas récupéré dans un délai de trois jours, il sera retourné à l’expéditeur."
   },
   ar: {
     loading: "جاري التحميل…",
@@ -51,7 +48,7 @@ const translations = {
     pickupPoint: "نقطة الاستلام",
     addressUnavailable: "العنوان غير متوفر",
     country: "الجزائر",
-    contactStopdesk:"اتصل بمكتب التوصيل",
+    contactStopdesk: "اتصل بنقطة التوقف",
     notAvailable: "غير متوفر",
     openingHours: "ساعات العمل",
     notProvided: "غير محدد",
@@ -59,7 +56,6 @@ const translations = {
     pickupInstructions: "تعليمات الاستلام",
     instruction1: "قدّم بطاقة هوية",
     instruction2: "أظهر هذه الرسالة أو رقم التتبع الخاص بك",
-    instruction3:"إذا لم يتم استلام الطرد خلال ثلاثة أيام، فسيتم إرجاعه إلى المرسل."
   },
 };
 
@@ -112,51 +108,19 @@ const getTheme = (companyName?: string): StopdeskTheme => {
     };
   }
 
-  // 🔴 Anderson: red primary, black secondary, soft yellow tint
-  if (name === "anderson") {
+  // 🔵🟠 Maystro Delivery: logo blue with orange accents
+  if (name === "maystro" || name === "maystro delivery") {
     return {
-      bgGradient: "from-[#FEF9C3] to-white",
-      primaryText: "text-[#0A0A0A]",
-      secondaryText: "text-[#DC2626]",
-      mutedText: "text-gray-600",
-      cardAccentBg: "bg-[#FEF9C3]",
-      iconCircleBg: "bg-[#DC2626]",
-      phoneText: "text-[#DC2626] hover:text-red-700",
-      buttonBg: "bg-[#DC2626]",
-      buttonHoverBg: "hover:bg-red-700",
-      footerBg: "bg-[#0A0A0A]",
-    };
-  }
-
-  // 🔵🔴 imir Logistics: navy blue primary, red accent
-  if (name === "imir" || name === "imir logistics") {
-    return {
-      bgGradient: "from-[#EEF2F9] to-white",
-      primaryText: "text-[#1F3A6E]",
-      secondaryText: "text-[#C0202F]",
-      mutedText: "text-gray-600",
-      cardAccentBg: "bg-[#EEF2F9]",
-      iconCircleBg: "bg-[#1F3A6E]",
-      phoneText: "text-[#C0202F] hover:text-red-700",
-      buttonBg: "bg-[#1F3A6E]",
-      buttonHoverBg: "hover:bg-[#16294f]",
-      footerBg: "bg-[#1F3A6E]",
-    };
-  }
-
-  // 🔴⚫ RedEx: red primary, black accent
-  if (name === "redex") {
-    return {
-      bgGradient: "from-[#FEF2F2] to-white",
-      primaryText: "text-[#E31E24]",
-      secondaryText: "text-[#111111]",
-      mutedText: "text-gray-600",
-      cardAccentBg: "bg-[#FEF2F2]",
-      iconCircleBg: "bg-[#E31E24]",
-      phoneText: "text-[#E31E24] hover:text-red-700",
-      buttonBg: "bg-[#E31E24]",
-      buttonHoverBg: "hover:bg-red-700",
-      footerBg: "bg-[#111111]",
+      bgGradient: "from-sky-50 via-white to-orange-50",
+      primaryText: "text-sky-950",
+      secondaryText: "text-sky-800",
+      mutedText: "text-slate-600",
+      cardAccentBg: "bg-sky-50",
+      iconCircleBg: "bg-sky-600",
+      phoneText: "text-sky-700 hover:text-orange-600",
+      buttonBg: "bg-sky-600",
+      buttonHoverBg: "hover:bg-sky-700",
+      footerBg: "bg-sky-950",
     };
   }
 
@@ -174,33 +138,9 @@ const getTheme = (companyName?: string): StopdeskTheme => {
     footerBg: "bg-blue-900",
   };
 };
-
-// 🔴 Hardcoded Anderson stopdesk (used when urlcode starts with "ANDR")
-const ANDERSON_MOCK = {
-  name: "Anderson Logistique – Stopdesk Alger Centre",
-  adresse: "12 Rue Didouche Mourad",
-  commune: "Alger Centre",
-  wilaya: "Alger",
-  code_wilaya: 16,
-  phone: "0770 12 34 56",
-  phone2: "021 63 45 78",
-  company: "anderson",
-  lng: "fr",
-  desk_url_code: "ANDR001",
-  map: "https://www.google.com/maps/search/?api=1&query=Rue+Didouche+Mourad+Alger",
-  iframeMap: "https://www.google.com/maps?q=Rue+Didouche+Mourad+Alger&output=embed",
-  hub_working_days: [
-    { day: "Dimanche", openTime: "08:30", closeTime: "17:00" },
-    { day: "Lundi", openTime: "08:30", closeTime: "17:00" },
-    { day: "Mardi", openTime: "08:30", closeTime: "17:00" },
-    { day: "Mercredi", openTime: "08:30", closeTime: "17:00" },
-    { day: "Jeudi", openTime: "08:30", closeTime: "16:00" },
-  ],
-} as EcoStop;
-
-export default function StopdeskPage({ params }: { params: { urlcode: string } }) {
-
-  const urlcode = decodeURIComponent(params.urlcode || "").trim();
+export default function StopdeskPage({ params }: { params: Promise<{ urlcode: string }> }) {
+  const { urlcode: rawUrlcode } = use(params);
+  const urlcode = decodeURIComponent(rawUrlcode || "").trim();
   const [isVisible, setIsVisible] = useState(false);
   const [stop, setStop] = useState<EcoStop | null>(null);
   const [loading, setLoading] = useState(true);
@@ -217,12 +157,32 @@ export default function StopdeskPage({ params }: { params: { urlcode: string } }
     (async () => {
       setLoading(true);
 
-      // 🔴 Anderson: skip Firestore entirely, use hardcoded data
-      if (urlcode.toUpperCase().startsWith("ANDR")) {
+      // /0000 is the public Maystro Delivery stopdesk profile.
+      if (urlcode === "0000") {
+        const maystroStop: EcoStop = {
+          name: "Maystro Delivery Oued Smar",
+          adresse: "P52W+C6G, Oued Smar",
+          commune: "Oued Smar",
+          wilaya: "Alger",
+          code_wilaya: 16,
+          phone: "0770 00 81 58",
+          map: "https://share.google/pJvxnoBt106j1fXj8",
+          iframeMap: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3198.8974598974137!2d3.1930102767684225!3d36.70100187227563!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x128e51b2037b6f55%3A0x2eeb7b0b09b9f230!2sMaystro%20Delivery%20Oued%20Smar!5e0!3m2!1sen!2sdz!4v1791744230998!5m2!1sen!2sdz",
+          company: "Maystro",
+          hub_working_days: [
+            { day: "Dimanche", openTime: "8 AM", closeTime: "8:30 PM" },
+            { day: "Lundi", openTime: "8 AM", closeTime: "7:30 PM" },
+            { day: "Mardi", openTime: "8 AM", closeTime: "8:30 PM" },
+            { day: "Mercredi", openTime: "8 AM", closeTime: "8:30 PM" },
+            { day: "Jeudi", openTime: "8 AM", closeTime: "8:30 PM" },
+            { day: "Vendredi", openTime: "Fermé", closeTime: "" },
+            { day: "Samedi", openTime: "8 AM", closeTime: "8:30 PM" },
+          ],
+        };
         if (!alive) return;
-        setStop(ANDERSON_MOCK);
-        setCompany("anderson");
-        setLang(ANDERSON_MOCK.lng === "ar" ? "ar" : "fr");
+        setStop(maystroStop);
+        setCompany(maystroStop.company ?? null);
+        setLang("fr");
         setLoading(false);
         return;
       }
@@ -244,12 +204,6 @@ export default function StopdeskPage({ params }: { params: { urlcode: string } }
         if (m) data = (m.data() as EcoStop) ?? null;
       }
 
-      // 🔹 Step 2. Fall back to hardcoded demo stopdesks (e.g. imir)
-      if (!data) {
-        const demo = findDemoStop(urlcode);
-        if (demo) data = demo as EcoStop;
-      }
-
       if (!alive) return;
       setStop(data);
       setCompany(data?.company ?? null);
@@ -268,7 +222,7 @@ export default function StopdeskPage({ params }: { params: { urlcode: string } }
       alive = false;
     };
   }, [urlcode]);
-  const theme = getTheme(company); // or props.companyName
+  const theme = getTheme(company ?? undefined);
 
   const title = stop?.name || "EcoTrack Stopdesk";
   const fullAddress = useMemo(() => {
@@ -297,9 +251,11 @@ const wilayaPostal = wilayaCode ? `${wilayaCode}000` : undefined;
         {t.notFound} {urlcode}
       </div>
     );
-  const imgSrc = company
-  ? `/images/${company}.png`
-  : '/images/ecotrack-logo.png';
+  const imgSrc = company?.toLowerCase() === "maystro"
+    ? "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-9Mu4p2ZhElFz4zPKbdau9yyFoTa5gw.png"
+    : company
+      ? `/images/${company}.png`
+      : "/images/ecotrack-logo.png";
   return (
     <div
       className={`min-h-screen bg-gradient-to-br ${theme.bgGradient}`}
@@ -308,7 +264,7 @@ const wilayaPostal = wilayaCode ? `${wilayaCode}000` : undefined;
       <header className="bg-white shadow-lg">
         <div className="container mx-auto px-4 py-4">
           <div className={`flex justify-center transition-all duration-1000 ${isVisible ? "translate-y-0 opacity-100" : "-translate-y-5 opacity-0"}`}>
-            <Image src={imgSrc || "/placeholder.svg"} alt="EcoTrack Logo" width={200} height={60} className="h-10 w-auto" />
+            <img src={imgSrc || "/placeholder.svg"} alt={`${company || "EcoTrack"} logo`} width={200} height={60} className="h-10 w-auto object-contain" />
           </div>
         </div>
       </header>
@@ -437,7 +393,6 @@ const wilayaPostal = wilayaCode ? `${wilayaCode}000` : undefined;
               <ul className={`text-sm ${theme.secondaryText} space-y-1`}>
                 <li>• {t.instruction1}</li>
                 <li>• {t.instruction2}</li>
-                <li>• {t.instruction3}</li>
               </ul>
             </CardContent>
           </Card>
@@ -447,12 +402,12 @@ const wilayaPostal = wilayaCode ? `${wilayaCode}000` : undefined;
       <footer className={`${theme.footerBg} text-white py-6 mt-8`}>
         <div className="container mx-auto px-4 text-center">
           <div className="flex justify-center items-center mb-2">
-            <Image
+            <img
               src={imgSrc || "/placeholder.svg"}
-              alt="EcoTrack Logo"
+              alt={`${company || "EcoTrack"} logo`}
               width={120}
               height={36}
-              className="h-6 w-auto filter brightness-0 invert"
+              className="h-7 w-auto rounded bg-white px-2 object-contain"
             />
           </div>
         </div>
