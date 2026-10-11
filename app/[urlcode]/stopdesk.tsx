@@ -182,7 +182,7 @@ export default function StopdeskPage({ params }: { params: Promise<{ urlcode: st
         if (!alive) return;
         setStop(maystroStop);
         setCompany(maystroStop.company ?? null);
-        setLang("fr");
+        setLang("ar");
         setLoading(false);
         return;
       }
