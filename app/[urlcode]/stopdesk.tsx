@@ -172,6 +172,7 @@ const getTheme = (companyName?: string): StopdeskTheme => {
       buttonHoverBg: "hover:bg-sky-700",
       footerBg: "bg-sky-950",
     };
+   }
 
   // ✅ Default theme (your original)
   return {
