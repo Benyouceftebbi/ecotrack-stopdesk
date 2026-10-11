@@ -241,7 +241,7 @@ export default function StopdeskPage({ params }: { params: { urlcode: string } }
           phone: "0770 00 81 58",
           map: "https://share.google/pJvxnoBt106j1fXj8",
           iframeMap: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3198.8974598974137!2d3.1930102767684225!3d36.70100187227563!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x128e51b2037b6f55%3A0x2eeb7b0b09b9f230!2sMaystro%20Delivery%20Oued%20Smar!5e0!3m2!1sen!2sdz!4v1791744230998!5m2!1sen!2sdz",
-          company: "Maystro",
+          company: "maystro",
           hub_working_days: [
             { day: "Dimanche", openTime: "8 AM", closeTime: "8:30 PM" },
             { day: "Lundi", openTime: "8 AM", closeTime: "7:30 PM" },
