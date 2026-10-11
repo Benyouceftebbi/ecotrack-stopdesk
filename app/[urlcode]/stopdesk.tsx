@@ -159,6 +159,19 @@ const getTheme = (companyName?: string): StopdeskTheme => {
       footerBg: "bg-[#111111]",
     };
   }
+   if (name === "maystro" || name === "maystro delivery") {
+    return {
+      bgGradient: "from-sky-50 via-white to-orange-50",
+      primaryText: "text-sky-950",
+      secondaryText: "text-sky-800",
+      mutedText: "text-slate-600",
+      cardAccentBg: "bg-sky-50",
+      iconCircleBg: "bg-sky-600",
+      phoneText: "text-sky-700 hover:text-orange-600",
+      buttonBg: "bg-sky-600",
+      buttonHoverBg: "hover:bg-sky-700",
+      footerBg: "bg-sky-950",
+    };
 
   // ✅ Default theme (your original)
   return {
@@ -216,6 +229,35 @@ export default function StopdeskPage({ params }: { params: { urlcode: string } }
 
     (async () => {
       setLoading(true);
+ // /0000 is the public Maystro Delivery stopdesk profile.
+      if (urlcode === "0000") {
+        const maystroStop: EcoStop = {
+          name: "Maystro Delivery Oued Smar",
+          adresse: "P52W+C6G, Oued Smar",
+          commune: "Oued Smar",
+          wilaya: "Alger",
+          code_wilaya: 16,
+          phone: "0770 00 81 58",
+          map: "https://share.google/pJvxnoBt106j1fXj8",
+          iframeMap: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3198.8974598974137!2d3.1930102767684225!3d36.70100187227563!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x128e51b2037b6f55%3A0x2eeb7b0b09b9f230!2sMaystro%20Delivery%20Oued%20Smar!5e0!3m2!1sen!2sdz!4v1791744230998!5m2!1sen!2sdz",
+          company: "Maystro",
+          hub_working_days: [
+            { day: "Dimanche", openTime: "8 AM", closeTime: "8:30 PM" },
+            { day: "Lundi", openTime: "8 AM", closeTime: "7:30 PM" },
+            { day: "Mardi", openTime: "8 AM", closeTime: "8:30 PM" },
+            { day: "Mercredi", openTime: "8 AM", closeTime: "8:30 PM" },
+            { day: "Jeudi", openTime: "8 AM", closeTime: "8:30 PM" },
+            { day: "Vendredi", openTime: "Fermé", closeTime: "" },
+            { day: "Samedi", openTime: "8 AM", closeTime: "8:30 PM" },
+          ],
+        };
+        if (!alive) return;
+        setStop(maystroStop);
+        setCompany(maystroStop.company ?? null);
+        setLang("ar");
+        setLoading(false);
+        return;
+      }
 
       // 🔴 Anderson: skip Firestore entirely, use hardcoded data
       if (urlcode.toUpperCase().startsWith("ANDR")) {
