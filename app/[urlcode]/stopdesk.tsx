@@ -173,6 +173,20 @@ const getTheme = (companyName?: string): StopdeskTheme => {
       footerBg: "bg-sky-950",
     };
    }
+  if (name === "zr" || name === "zr express" || name === "zrexpress") {
+  return {
+    bgGradient: "from-amber-50 via-white to-yellow-50",
+    primaryText: "text-zinc-950",
+    secondaryText: "text-yellow-800",
+    mutedText: "text-slate-600",
+    cardAccentBg: "bg-amber-50",
+    iconCircleBg: "bg-yellow-500",
+    phoneText: "text-yellow-700 hover:text-zinc-950",
+    buttonBg: "bg-yellow-500",
+    buttonHoverBg: "hover:bg-yellow-600",
+    footerBg: "bg-zinc-950",
+  };
+}
 
   // ✅ Default theme (your original)
   return {
@@ -242,6 +256,27 @@ export default function StopdeskPage({ params }: { params: { urlcode: string } }
           map: "https://share.google/pJvxnoBt106j1fXj8",
           iframeMap: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3198.8974598974137!2d3.1930102767684225!3d36.70100187227563!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x128e51b2037b6f55%3A0x2eeb7b0b09b9f230!2sMaystro%20Delivery%20Oued%20Smar!5e0!3m2!1sen!2sdz!4v1791744230998!5m2!1sen!2sdz",
           company: "maystro",
+          hub_working_days: [
+            { day: "Dimanche", openTime: "8 AM", closeTime: "8:30 PM" },
+            { day: "Lundi", openTime: "8 AM", closeTime: "7:30 PM" },
+            { day: "Mardi", openTime: "8 AM", closeTime: "8:30 PM" },
+            { day: "Mercredi", openTime: "8 AM", closeTime: "8:30 PM" },
+            { day: "Jeudi", openTime: "8 AM", closeTime: "8:30 PM" },
+            { day: "Vendredi", openTime: "Fermé", closeTime: "" },
+            { day: "Samedi", openTime: "8 AM", closeTime: "8:30 PM" },
+          ],
+        };
+        if (urlcode === "zr") {
+        const maystroStop: EcoStop = {
+          name: "ZR EXPRESS ROUIBA DIRECTION GÉNÉRALE",
+          adresse: "P7CV+M3Q, Rouiba",
+          commune: "Rouiba",
+          wilaya: "Alger",
+          code_wilaya: 16,
+          phone: "0770 00 81 58",
+          map: "https://maps.app.goo.gl/MnHmTn8fLMp8qUm49",
+          iframeMap: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3198.0349061568204!2d3.2927456999999998!3d36.721722899999996!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x128e5b00591b1579%3A0x76ab5b64878d9e52!2sZR%20EXPRESS%20ROUIBA%20DIRECTION%20G%C3%89N%C3%89RALE!5e0!3m2!1sen!2sdz!4v1791923371913!5m2!1sen!2sdz",
+          company: "zr",
           hub_working_days: [
             { day: "Dimanche", openTime: "8 AM", closeTime: "8:30 PM" },
             { day: "Lundi", openTime: "8 AM", closeTime: "7:30 PM" },
