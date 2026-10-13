@@ -173,7 +173,7 @@ const getTheme = (companyName?: string): StopdeskTheme => {
       footerBg: "bg-sky-950",
     };
    }
-  if (name === "zr" || name === "zr express" || name === "zrexpress") {
+  if (name === "zr" || name === "zr express" || name === "zrexpress"|| name === "ZR") {
   return {
     bgGradient: "from-amber-50 via-white to-yellow-50",
     primaryText: "text-zinc-950",
@@ -266,8 +266,16 @@ export default function StopdeskPage({ params }: { params: { urlcode: string } }
             { day: "Samedi", openTime: "8 AM", closeTime: "8:30 PM" },
           ],
         };
-        if (urlcode === "zr") {
-        const maystroStop: EcoStop = {
+     
+        if (!alive) return;
+        setStop(maystroStop);
+        setCompany(maystroStop.company ?? null);
+        setLang("ar");
+        setLoading(false);
+        return;
+      }
+   if (urlcode === "zr"||urlcode === "ZR") {
+        const zrStop: EcoStop = {
           name: "ZR EXPRESS ROUIBA DIRECTION GÉNÉRALE",
           adresse: "P7CV+M3Q, Rouiba",
           commune: "Rouiba",
@@ -287,14 +295,14 @@ export default function StopdeskPage({ params }: { params: { urlcode: string } }
             { day: "Samedi", openTime: "8 AM", closeTime: "8:30 PM" },
           ],
         };
+       
         if (!alive) return;
-        setStop(maystroStop);
-        setCompany(maystroStop.company ?? null);
+        setStop(zrStop);
+        setCompany(zrStop.company ?? null);
         setLang("ar");
         setLoading(false);
         return;
       }
-
       // 🔴 Anderson: skip Firestore entirely, use hardcoded data
       if (urlcode.toUpperCase().startsWith("ANDR")) {
         if (!alive) return;
