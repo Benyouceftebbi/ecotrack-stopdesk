@@ -385,10 +385,47 @@ export const REDEX_DEMO_STOPS: DemoStop[] = [
   },
 ];
 
+/**
+ * HHD Express demo stopdesk — showcases the order-level details
+ * (amount to pay, sender with call/WhatsApp, live opening hours, map).
+ * Open it at /HHD-DEMO (or /hhd).
+ */
+export const HHD_DEMO_STOPS: DemoStop[] = [
+  {
+    id: "hhd",
+    desk_url_code: "HHD-DEMO",
+    name: "HHD Express – Stopdesk Bab Ezzouar",
+    phone: "0550 48 27 16",
+    phone2: "0770 48 27 16",
+    code_wilaya: 16,
+    wilaya: "Alger",
+    commune: "Bab Ezzouar",
+    adresse: "Cité 5 Juillet, Bât. 12, Local n°3 (à côté de la pharmacie)",
+    map: "https://www.google.com/maps/search/?api=1&query=Bab+Ezzouar+Alger",
+    iframeMap: "https://www.google.com/maps?q=Bab+Ezzouar,+Alger,+Alg%C3%A9rie&z=15&output=embed",
+    company: "HHDExpress",
+    lng: "fr",
+    hub_working_days: [
+      { day: "Dimanche", openTime: "08:00", closeTime: "18:00" },
+      { day: "Lundi", openTime: "08:00", closeTime: "18:00" },
+      { day: "Mardi", openTime: "08:00", closeTime: "18:00" },
+      { day: "Mercredi", openTime: "08:00", closeTime: "18:00" },
+      { day: "Jeudi", openTime: "08:00", closeTime: "16:30" },
+      { day: "Vendredi", openTime: "Fermé", closeTime: "" },
+      { day: "Samedi", openTime: "09:00", closeTime: "17:00" },
+    ],
+    order_price: 4500,
+    sender_name: "Boutique Nour Style",
+    sender_phone: "0661 23 45 67",
+    tracking: "HHD-2611-48273",
+  },
+];
+
 export const DEMO_STOPS_BY_COMPANY: Record<string, DemoStop[]> = {
   anderson: ANDERSON_DEMO_STOPS,
   imir: IMIR_DEMO_STOPS,
   redex: REDEX_DEMO_STOPS,
+  hhdexpress: HHD_DEMO_STOPS,
 };
 
 /** Find a single demo stopdesk by its URL code (case-insensitive). */

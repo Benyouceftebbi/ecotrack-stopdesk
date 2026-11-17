@@ -10,6 +10,33 @@ import { MapPin, Phone, Clock, Package, Navigation } from "lucide-react";
 import Image from "next/image";
 import { WILAYA_NAMES } from "@/lib/wilayas";
 import { findDemoStop } from "@/lib/demoStops";
+import { getCompany } from "@/lib/companies";
+import HhdStopdesk from "@/components/hhd/hhd-stopdesk";
+import { isHhdCompany } from "@/components/hhd/utils";
+
+type SearchParams = Record<string, string | string[] | undefined>;
+
+const firstParam = (sp: SearchParams | undefined, ...keys: string[]) => {
+  for (const k of keys) {
+    const v = sp?.[k];
+    const s = Array.isArray(v) ? v[0] : v;
+    if (s && s.trim()) return s.trim();
+  }
+  return undefined;
+};
+
+/**
+ * Order-level details can be appended to any HHD Express stopdesk link, e.g.
+ * /HHD-DEMO?price=4500&sender=Boutique%20Nour&senderPhone=0661234567&tracking=HHD-123
+ */
+const withOrderParams = (stop: EcoStop, sp?: SearchParams): EcoStop => ({
+  ...stop,
+  order_price: firstParam(sp, "price", "prix", "montant") ?? stop.order_price,
+  sender_name: firstParam(sp, "sender", "expediteur", "exp") ?? stop.sender_name,
+  sender_phone: firstParam(sp, "senderPhone", "sender_phone", "tel") ?? stop.sender_phone,
+  sender_whatsapp: firstParam(sp, "wa", "whatsapp") ?? stop.sender_whatsapp,
+  tracking: firstParam(sp, "tracking", "suivi") ?? stop.tracking,
+});
 
 type Language = "fr" | "ar";
 
@@ -226,7 +253,13 @@ const ANDERSON_MOCK = {
   ],
 } as EcoStop;
 
-export default function StopdeskPage({ params }: { params: { urlcode: string } }) {
+export default function StopdeskPage({
+  params,
+  searchParams,
+}: {
+  params: { urlcode: string };
+  searchParams?: SearchParams;
+}) {
 
   const urlcode = decodeURIComponent(params.urlcode || "").trim();
   const [isVisible, setIsVisible] = useState(false);
@@ -313,21 +346,36 @@ export default function StopdeskPage({ params }: { params: { urlcode: string } }
         return;
       }
 
-      // 🔹 Step 1. Try to find stop in Firestore
-      const dref = doc(db, "EcoStop", urlcode);
-      const dsnap = await getDoc(dref);
+      // 🔵🟡 HHD Express demo: served from hardcoded data, no Firestore round-trip.
+      const hhdDemo = findDemoStop(urlcode);
+      if (hhdDemo && isHhdCompany(hhdDemo.company)) {
+        if (!alive) return;
+        setStop(hhdDemo as EcoStop);
+        setCompany(hhdDemo.company ?? null);
+        setLang(hhdDemo.lng === "ar" ? "ar" : "fr");
+        setLoading(false);
+        return;
+      }
 
+      // 🔹 Step 1. Try to find stop in Firestore
       let data: EcoStop | null = null;
 
-      if (dsnap.exists()) {
-        data = (dsnap.data() as EcoStop) ?? null;
-      } else {
-        // fallback query by desk_url_code
-        const q1 = query(collection(db, "EcoStop"), where("desk_url_code", "==", urlcode), limit(1));
-        const q2 = query(collection(db, "EcoStop"), where("desk_url_code", "==", urlcode.toUpperCase()), limit(1));
-        const [r1, r2] = await Promise.all([getDocs(q1), getDocs(q2)]);
-        const m = r1.docs[0] || r2.docs[0];
-        if (m) data = (m.data() as EcoStop) ?? null;
+      try {
+        const dref = doc(db, "EcoStop", urlcode);
+        const dsnap = await getDoc(dref);
+
+        if (dsnap.exists()) {
+          data = (dsnap.data() as EcoStop) ?? null;
+        } else {
+          // fallback query by desk_url_code
+          const q1 = query(collection(db, "EcoStop"), where("desk_url_code", "==", urlcode), limit(1));
+          const q2 = query(collection(db, "EcoStop"), where("desk_url_code", "==", urlcode.toUpperCase()), limit(1));
+          const [r1, r2] = await Promise.all([getDocs(q1), getDocs(q2)]);
+          const m = r1.docs[0] || r2.docs[0];
+          if (m) data = (m.data() as EcoStop) ?? null;
+        }
+      } catch (err) {
+        console.error("[stopdesk] Firestore lookup failed", err);
       }
 
       // 🔹 Step 2. Fall back to hardcoded demo stopdesks (e.g. imir)
@@ -383,9 +431,16 @@ const wilayaPostal = wilayaCode ? `${wilayaCode}000` : undefined;
         {t.notFound} {urlcode}
       </div>
     );
+  // 🔵🟡 HHD Express gets its own redesigned page.
+  if (isHhdCompany(company)) {
+    return <HhdStopdesk stop={withOrderParams(stop, searchParams)} initialLang={lang} />;
+  }
+
+  // Resolve the logo through the companies registry so "hhd express", "dhd"… map to the
+  // right (case-sensitive) file on the server instead of a 404.
   const imgSrc = company
-  ? `/images/${company}.png`
-  : '/images/ecotrack-logo.png';
+    ? getCompany(company)?.logo ?? `/images/${company}.png`
+    : "/images/ecotrack-logo.png";
   return (
     <div
       className={`min-h-screen bg-gradient-to-br ${theme.bgGradient}`}

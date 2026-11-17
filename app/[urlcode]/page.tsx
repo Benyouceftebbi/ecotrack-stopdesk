@@ -12,19 +12,30 @@ import {
 } from "firebase/firestore";
 
 import { db } from "@/lib/firebase"; // modular firestore (server)
+import { findDemoStop } from "@/lib/demoStops";
+import { isHhdCompany } from "@/components/hhd/utils";
+
+type SearchParams = Record<string, string | string[] | undefined>;
 
 async function getStopdesk(urlcode: string) {
-  const dref = doc(db, "EcoStop", urlcode);
-  const dsnap = await getDoc(dref);
-  if (dsnap.exists()) return dsnap.data();
+  const demo = findDemoStop(urlcode);
+  if (demo && isHhdCompany(demo.company)) return demo;
 
-  const q1 = query(collection(db, "EcoStop"), where("desk_url_code", "==", urlcode), limit(1));
-  const q2 = query(collection(db, "EcoStop"), where("desk_url_code", "==", urlcode.toUpperCase()), limit(1));
+  try {
+    const dref = doc(db, "EcoStop", urlcode);
+    const dsnap = await getDoc(dref);
+    if (dsnap.exists()) return dsnap.data();
 
-  const [r1, r2] = await Promise.all([getDocs(q1), getDocs(q2)]);
-  const m = r1.docs[0] || r2.docs[0];
+    const q1 = query(collection(db, "EcoStop"), where("desk_url_code", "==", urlcode), limit(1));
+    const q2 = query(collection(db, "EcoStop"), where("desk_url_code", "==", urlcode.toUpperCase()), limit(1));
 
-  return m ? m.data() : null;
+    const [r1, r2] = await Promise.all([getDocs(q1), getDocs(q2)]);
+    const m = r1.docs[0] || r2.docs[0];
+
+    return m ? m.data() : demo ?? null;
+  } catch {
+    return demo ?? null;
+  }
 }
 
 export async function generateMetadata({
@@ -35,7 +46,7 @@ export async function generateMetadata({
   const urlcode = decodeURIComponent(params.urlcode || "").trim();
   const stop = await getStopdesk(urlcode);
 
-  const company = stop?.company || "StopDesk";
+  const company = isHhdCompany(stop?.company) ? "HHD Express" : stop?.company || "StopDesk";
   const name = stop?.name || "Point de retrait";
 
   return {
@@ -44,6 +55,12 @@ export async function generateMetadata({
   };
 }
 
-export default function Page({ params }: { params: { urlcode: string } }) {
-  return <StopdeskPage params={params} />;
+export default function Page({
+  params,
+  searchParams,
+}: {
+  params: { urlcode: string };
+  searchParams?: SearchParams;
+}) {
+  return <StopdeskPage params={params} searchParams={searchParams} />;
 }
