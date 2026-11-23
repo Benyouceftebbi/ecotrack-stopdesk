@@ -11,8 +11,8 @@ import Image from "next/image";
 import { WILAYA_NAMES } from "@/lib/wilayas";
 import { findDemoStop } from "@/lib/demoStops";
 import { getCompany } from "@/lib/companies";
-import HhdStopdesk from "@/components/hhd/hhd-stopdesk";
-import { isHhdCompany } from "@/components/hhd/utils";
+import BrandStopdesk from "@/components/brand-stopdesk/brand-stopdesk";
+import { getStopdeskBrand } from "@/components/brand-stopdesk/brands";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -26,7 +26,7 @@ const firstParam = (sp: SearchParams | undefined, ...keys: string[]) => {
 };
 
 /**
- * Order-level details can be appended to any HHD Express stopdesk link, e.g.
+ * Order-level details can be appended to any redesigned (HHD Express, DHD…) stopdesk link, e.g.
  * /HHD-DEMO?price=4500&sender=Boutique%20Nour&senderPhone=0661234567&tracking=HHD-123
  */
 const withOrderParams = (stop: EcoStop, sp?: SearchParams): EcoStop => ({
@@ -346,13 +346,13 @@ export default function StopdeskPage({
         return;
       }
 
-      // 🔵🟡 HHD Express demo: served from hardcoded data, no Firestore round-trip.
-      const hhdDemo = findDemoStop(urlcode);
-      if (hhdDemo && isHhdCompany(hhdDemo.company)) {
+      // 🎨 Demos of the redesigned pages (HHD Express, DHD): hardcoded data, no Firestore round-trip.
+      const brandDemo = findDemoStop(urlcode);
+      if (brandDemo && getStopdeskBrand(brandDemo.company)) {
         if (!alive) return;
-        setStop(hhdDemo as EcoStop);
-        setCompany(hhdDemo.company ?? null);
-        setLang(hhdDemo.lng === "ar" ? "ar" : "fr");
+        setStop(brandDemo as EcoStop);
+        setCompany(brandDemo.company ?? null);
+        setLang(brandDemo.lng === "ar" ? "ar" : "fr");
         setLoading(false);
         return;
       }
@@ -431,9 +431,10 @@ const wilayaPostal = wilayaCode ? `${wilayaCode}000` : undefined;
         {t.notFound} {urlcode}
       </div>
     );
-  // 🔵🟡 HHD Express gets its own redesigned page.
-  if (isHhdCompany(company)) {
-    return <HhdStopdesk stop={withOrderParams(stop, searchParams)} initialLang={lang} />;
+  // 🎨 Companies with the redesigned page (HHD Express, DHD…).
+  const brand = getStopdeskBrand(company);
+  if (brand) {
+    return <BrandStopdesk brand={brand} stop={withOrderParams(stop, searchParams)} initialLang={lang} />;
   }
 
   // Resolve the logo through the companies registry so "hhd express", "dhd"… map to the

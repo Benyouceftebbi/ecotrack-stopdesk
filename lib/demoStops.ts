@@ -421,11 +421,47 @@ export const HHD_DEMO_STOPS: DemoStop[] = [
   },
 ];
 
+/**
+ * DHD Livraison demo stopdesk — same redesigned page in DHD's orange & charcoal.
+ * Open it at /DHD-DEMO (or /dhd).
+ */
+export const DHD_DEMO_STOPS: DemoStop[] = [
+  {
+    id: "dhd",
+    desk_url_code: "DHD-DEMO",
+    name: "DHD Livraison – Stopdesk Oran Centre",
+    phone: "0551 36 72 19",
+    phone2: "0661 36 72 19",
+    code_wilaya: 31,
+    wilaya: "Oran",
+    commune: "Oran",
+    adresse: "14 Boulevard de la Soummam, en face de la place du 1er Novembre",
+    map: "https://www.google.com/maps/search/?api=1&query=Boulevard+de+la+Soummam+Oran",
+    iframeMap: "https://www.google.com/maps?q=Boulevard+de+la+Soummam,+Oran,+Alg%C3%A9rie&z=15&output=embed",
+    company: "DHD",
+    lng: "fr",
+    hub_working_days: [
+      { day: "Dimanche", openTime: "08:30", closeTime: "18:30" },
+      { day: "Lundi", openTime: "08:30", closeTime: "18:30" },
+      { day: "Mardi", openTime: "08:30", closeTime: "18:30" },
+      { day: "Mercredi", openTime: "08:30", closeTime: "18:30" },
+      { day: "Jeudi", openTime: "08:30", closeTime: "17:00" },
+      { day: "Vendredi", openTime: "Fermé", closeTime: "" },
+      { day: "Samedi", openTime: "09:00", closeTime: "16:00" },
+    ],
+    order_price: 3200,
+    sender_name: "Maison Lina Cosmetics",
+    sender_phone: "0698 14 52 70",
+    tracking: "DHD-2311-50917",
+  },
+];
+
 export const DEMO_STOPS_BY_COMPANY: Record<string, DemoStop[]> = {
   anderson: ANDERSON_DEMO_STOPS,
   imir: IMIR_DEMO_STOPS,
   redex: REDEX_DEMO_STOPS,
   hhdexpress: HHD_DEMO_STOPS,
+  dhd: DHD_DEMO_STOPS,
 };
 
 /** Find a single demo stopdesk by its URL code (case-insensitive). */

@@ -25,11 +25,12 @@ import {
 } from "lucide-react";
 import type { EcoStop } from "@/types/ecostop";
 import { WILAYA_NAMES } from "@/lib/wilayas";
+import { brandVars, type StopdeskBrand } from "./brands";
 import {
   AR_DAYS,
   FR_DAYS,
-  HHD_LOGO,
   buildWeek,
+  deFr,
   extractIframeSrc,
   fmtMinutes,
   formatDA,
@@ -40,38 +41,38 @@ import {
   telHref,
   whatsappHref,
 } from "./utils";
-import "./hhd-stopdesk.css";
+import "./brand-stopdesk.css";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
   display: "swap",
-  variable: "--font-hhd",
+  variable: "--font-sd",
 });
 
 const cairo = Cairo({
   subsets: ["arabic", "latin"],
   weight: ["400", "600", "700", "800"],
   display: "swap",
-  variable: "--font-hhd-ar",
+  variable: "--font-sd-ar",
 });
 
-export type HhdLang = "fr" | "ar";
+export type StopdeskLang = "fr" | "ar";
 
-const duration = (mins: number, lang: HhdLang) => {
+const duration = (mins: number, lang: StopdeskLang) => {
   const h = Math.floor(mins / 60);
   const m = mins % 60;
   if (lang === "ar") return h ? `${h} سا ${m ? `${m} د` : ""}`.trim() : `${m} د`;
   return h ? `${h} h ${m ? `${String(m).padStart(2, "0")} min` : ""}`.trim() : `${m} min`;
 };
 
-const T = {
+const buildCopy = (brand: string) => ({
   fr: {
     badgeReady: "Prêt à être retiré",
     badgePoint: "Point de retrait officiel",
     heroTitle: "Votre colis vous attend !",
     heroTitlePoint: "Votre point de retrait",
-    heroSub: "Stopdesk HHD Express",
+    heroSub: `Stopdesk ${brand}`,
     tracking: "N° de suivi",
     copied: "Copié !",
     amountToPay: "Montant à payer",
@@ -113,17 +114,16 @@ const T = {
     ],
     dockStopdesk: "Stopdesk",
     dockSender: "Vendeur",
-    footer: "Livraison rapide dans les 58 wilayas",
     days: FR_DAYS,
     waMessage: (tracking?: string, place?: string) =>
-      `Bonjour, je vous contacte au sujet de ma commande${tracking ? ` (n° ${tracking})` : ""} disponible au stopdesk HHD Express${place ? ` de ${place}` : ""}.`,
+      `Bonjour, je vous contacte au sujet de ma commande${tracking ? ` (n° ${tracking})` : ""} disponible au stopdesk ${brand}${place ? ` ${deFr(place)}` : ""}.`,
   },
   ar: {
     badgeReady: "جاهز للاستلام",
     badgePoint: "نقطة استلام رسمية",
     heroTitle: "طردك في انتظارك!",
     heroTitlePoint: "نقطة الاستلام الخاصة بك",
-    heroSub: "مكتب HHD Express",
+    heroSub: `مكتب ${brand}`,
     tracking: "رقم التتبع",
     copied: "تم النسخ!",
     amountToPay: "المبلغ المطلوب دفعه",
@@ -165,17 +165,16 @@ const T = {
     ],
     dockStopdesk: "المكتب",
     dockSender: "البائع",
-    footer: "توصيل سريع إلى 58 ولاية",
     days: AR_DAYS,
     waMessage: (tracking?: string, place?: string) =>
-      `السلام عليكم، أتواصل معكم بخصوص طلبي${tracking ? ` (رقم ${tracking})` : ""} المتوفر في مكتب HHD Express${place ? ` – ${place}` : ""}.`,
+      `السلام عليكم، أتواصل معكم بخصوص طلبي${tracking ? ` (رقم ${tracking})` : ""} المتوفر في مكتب ${brand}${place ? ` – ${place}` : ""}.`,
   },
-};
+});
 
 const delay = (ms: number) => ({ "--d": `${ms}ms` }) as CSSProperties;
 
 const CARD =
-  "rounded-3xl bg-white p-5 shadow-[0_12px_40px_-14px_rgba(10,47,102,0.22)] ring-1 ring-slate-900/[0.04] sm:p-6";
+  "rounded-3xl bg-white p-5 shadow-[0_12px_40px_-14px_rgba(15,23,42,0.22)] ring-1 ring-slate-900/[0.04] sm:p-6";
 
 /** Animated count-up for the order amount. */
 function useCountUp(target: number | null, ms = 1400, startDelay = 450) {
@@ -206,21 +205,30 @@ function useCountUp(target: number | null, ms = 1400, startDelay = 450) {
 function BouncingPin() {
   return (
     <div className="flex flex-col items-center">
-      <div className="hhd-pin grid h-12 w-12 place-items-center rounded-full bg-[#0F4C9C] text-white shadow-xl ring-4 ring-white">
+      <div className="sd-pin grid h-12 w-12 place-items-center rounded-full bg-[var(--b-primary)] text-white shadow-xl ring-4 ring-white">
         <MapPin className="h-6 w-6" />
       </div>
-      <div className="hhd-pin-shadow mt-1.5 h-2 w-8 rounded-full bg-[#0A2F66]" />
+      <div className="sd-pin-shadow mt-1.5 h-2 w-8 rounded-full bg-[var(--b-dark)]" />
     </div>
   );
 }
 
-export default function HhdStopdesk({ stop, initialLang = "fr" }: { stop: EcoStop; initialLang?: HhdLang }) {
-  const [lang, setLang] = useState<HhdLang>(initialLang);
+export default function BrandStopdesk({
+  brand,
+  stop,
+  initialLang = "fr",
+}: {
+  brand: StopdeskBrand;
+  stop: EcoStop;
+  initialLang?: StopdeskLang;
+}) {
+  const [lang, setLang] = useState<StopdeskLang>(initialLang);
   const [now, setNow] = useState(() => nowInAlgeria());
   const [copied, setCopied] = useState<string | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
 
-  const t = T[lang];
+  const copyByLang = useMemo(() => buildCopy(brand.name), [brand.name]);
+  const t = copyByLang[lang];
   const isRTL = lang === "ar";
 
   useEffect(() => {
@@ -256,7 +264,9 @@ export default function HhdStopdesk({ stop, initialLang = "fr" }: { stop: EcoSto
   const wilayaName = wilayaCode ? WILAYA_NAMES[wilayaCode] : stop.wilaya || undefined;
   const wilayaLatin = wilayaName ? `${wilayaCode ? `${wilayaCode}000 ` : ""}${wilayaName}` : "";
 
-  const senderWaHref = senderWa ? whatsappHref(senderWa, t.waMessage(tracking, stop.commune || stop.wilaya || undefined)) : "";
+  const senderWaHref = senderWa
+    ? whatsappHref(senderWa, t.waMessage(tracking, stop.commune || stop.wilaya || undefined))
+    : "";
   const stopPhones = [stop.phone, stop.phone2].filter((p): p is string => Boolean(p && p.trim()));
 
   const copy = async (key: string, text: string) => {
@@ -306,34 +316,54 @@ export default function HhdStopdesk({ stop, initialLang = "fr" }: { stop: EcoSto
   })();
 
   const stepIcons = [IdCard, Smartphone, CalendarClock];
+  const logo = (cls: string, priority = false) => (
+    <Image
+      src={brand.logo.src}
+      alt={brand.name}
+      width={brand.logo.width}
+      height={brand.logo.height}
+      priority={priority}
+      className={cls}
+    />
+  );
 
   return (
     <div
       dir={isRTL ? "rtl" : "ltr"}
       lang={lang}
-      className={`hhd-root ${jakarta.variable} ${cairo.variable} min-h-screen overflow-x-hidden text-slate-900 antialiased`}
+      data-brand={brand.id}
+      className={`sd-root ${jakarta.variable} ${cairo.variable} min-h-screen overflow-x-hidden text-slate-900 antialiased`}
       style={{
+        ...brandVars(brand),
         fontFamily: isRTL
-          ? "var(--font-hhd-ar), system-ui, sans-serif"
-          : "var(--font-hhd), var(--font-hhd-ar), system-ui, sans-serif",
+          ? "var(--font-sd-ar), system-ui, sans-serif"
+          : "var(--font-sd), var(--font-sd-ar), system-ui, sans-serif",
       }}
     >
       {/* ═════════════ HERO ═════════════ */}
-      <header className="hhd-hero relative overflow-hidden pb-16 text-white">
-        <div className="hhd-dots absolute inset-0" aria-hidden />
-        <div className="hhd-glow absolute -end-24 -top-24 h-72 w-72 rounded-full bg-[#FFC20E]/30 blur-3xl" aria-hidden />
+      <header className="sd-hero relative overflow-hidden pb-16 text-white">
+        <div className="sd-dots absolute inset-0" aria-hidden />
+        <div
+          className="sd-glow absolute -end-24 -top-24 h-72 w-72 rounded-full bg-[var(--b-accent)]/30 blur-3xl"
+          aria-hidden
+        />
         <svg
           className="pointer-events-none absolute -end-16 -top-10 h-72 w-72 opacity-60 lg:h-[26rem] lg:w-[26rem]"
           viewBox="0 0 300 300"
           fill="none"
           aria-hidden
         >
-          <path className="hhd-arc" d="M30 130 C 100 10, 270 20, 280 170" stroke="#FFC20E" strokeWidth="12" strokeLinecap="round" />
           <path
-            className="hhd-arc"
-            style={delay(600)}
+            className="sd-arc"
+            d="M30 130 C 100 10, 270 20, 280 170"
+            style={{ stroke: "var(--b-accent)" }}
+            strokeWidth="12"
+            strokeLinecap="round"
+          />
+          <path
+            className="sd-arc"
+            style={{ ...delay(600), stroke: "var(--b-accent-2)" }}
             d="M70 160 C 130 80, 240 90, 245 190"
-            stroke="#FFD84D"
             strokeWidth="6"
             strokeLinecap="round"
             opacity=".55"
@@ -342,23 +372,23 @@ export default function HhdStopdesk({ stop, initialLang = "fr" }: { stop: EcoSto
 
         {/* Top bar */}
         <div className="relative mx-auto flex max-w-md items-center justify-between px-4 pt-4 lg:max-w-5xl lg:pt-6">
-          <div className="hhd-pop rounded-2xl bg-white px-3 py-2 shadow-lg shadow-black/15">
-            <Image src={HHD_LOGO} alt="HHD Express" width={754} height={360} priority className="h-8 w-auto sm:h-9" />
+          <div className="sd-pop rounded-2xl bg-white px-3 py-2 shadow-lg shadow-black/15">
+            {logo("h-8 w-auto sm:h-9", true)}
           </div>
           <div
-            className="hhd-pop flex rounded-full bg-white/10 p-1 ring-1 ring-white/20 backdrop-blur"
+            className="sd-pop flex rounded-full bg-white/10 p-1 ring-1 ring-white/20 backdrop-blur"
             style={delay(150)}
             role="group"
             aria-label="Langue / اللغة"
           >
-            {(["fr", "ar"] as HhdLang[]).map((l) => (
+            {(["fr", "ar"] as StopdeskLang[]).map((l) => (
               <button
                 key={l}
                 type="button"
                 onClick={() => setLang(l)}
                 aria-pressed={lang === l}
                 className={`rounded-full px-3 py-1.5 text-xs font-bold transition-all duration-300 ${
-                  lang === l ? "bg-white text-[#0A2F66] shadow" : "text-white/75 hover:text-white"
+                  lang === l ? "bg-white text-[var(--b-dark)] shadow" : "text-white/75 hover:text-white"
                 }`}
               >
                 {l === "fr" ? "FR" : "عربي"}
@@ -372,22 +402,22 @@ export default function HhdStopdesk({ stop, initialLang = "fr" }: { stop: EcoSto
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <span
-                className="hhd-rise inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold ring-1 ring-white/20 backdrop-blur"
+                className="sd-rise inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold ring-1 ring-white/20 backdrop-blur"
                 style={delay(120)}
               >
                 <span className="relative flex h-2 w-2">
-                  <span className="hhd-ping absolute inline-flex h-full w-full rounded-full bg-[#FFC20E]" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-[#FFC20E]" />
+                  <span className="sd-ping absolute inline-flex h-full w-full rounded-full bg-[var(--b-accent)]" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--b-accent)]" />
                 </span>
                 {hasOrder ? t.badgeReady : t.badgePoint}
               </span>
               <h1
-                className="hhd-rise mt-3 text-[28px] font-extrabold leading-[1.15] tracking-tight sm:text-4xl lg:text-5xl"
+                className="sd-rise mt-3 text-[28px] font-extrabold leading-[1.15] tracking-tight sm:text-4xl lg:text-5xl"
                 style={delay(200)}
               >
                 {hasOrder ? t.heroTitle : t.heroTitlePoint}
               </h1>
-              <p className="hhd-rise mt-2 text-sm text-white/75 sm:text-base" style={delay(280)}>
+              <p className="sd-rise mt-2 text-sm text-white/75 sm:text-base" style={delay(280)}>
                 {t.heroSub}
                 {(stop.commune || stop.wilaya) && (
                   <>
@@ -397,9 +427,9 @@ export default function HhdStopdesk({ stop, initialLang = "fr" }: { stop: EcoSto
                 )}
               </p>
             </div>
-            <div className="hhd-pop shrink-0 pt-1" style={delay(380)}>
-              <div className="hhd-float grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-[#FFD84D] to-[#FFB800] shadow-xl shadow-[#FFC20E]/30 sm:h-20 sm:w-20">
-                <PackageCheck className="h-8 w-8 text-[#0A2F66] sm:h-10 sm:w-10" strokeWidth={2.2} />
+            <div className="sd-pop shrink-0 pt-1" style={delay(380)}>
+              <div className="sd-float grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-[color:var(--b-accent-2)] to-[color:var(--b-accent)] shadow-xl shadow-black/20 sm:h-20 sm:w-20">
+                <PackageCheck className="h-8 w-8 text-[var(--b-on-accent)] sm:h-10 sm:w-10" strokeWidth={2.2} />
               </div>
             </div>
           </div>
@@ -408,7 +438,7 @@ export default function HhdStopdesk({ stop, initialLang = "fr" }: { stop: EcoSto
             <button
               type="button"
               onClick={() => copy("tracking", tracking)}
-              className="hhd-rise hhd-btn mt-5 inline-flex items-center gap-2.5 rounded-xl bg-white/10 px-3.5 py-2 ring-1 ring-white/20 backdrop-blur hover:bg-white/15"
+              className="sd-rise sd-btn mt-5 inline-flex items-center gap-2.5 rounded-xl bg-white/10 px-3.5 py-2 ring-1 ring-white/20 backdrop-blur hover:bg-white/15"
               style={delay(360)}
             >
               <span className="text-[11px] font-semibold uppercase tracking-wider text-white/60">{t.tracking}</span>
@@ -416,7 +446,7 @@ export default function HhdStopdesk({ stop, initialLang = "fr" }: { stop: EcoSto
                 {tracking}
               </span>
               {copied === "tracking" ? (
-                <Check className="h-4 w-4 text-[#FFC20E]" />
+                <Check className="h-4 w-4 text-[var(--b-accent)]" />
               ) : (
                 <Copy className="h-4 w-4 text-white/60" />
               )}
@@ -426,15 +456,15 @@ export default function HhdStopdesk({ stop, initialLang = "fr" }: { stop: EcoSto
 
         {/* Road + truck */}
         <div className="relative mx-auto mt-6 h-10 max-w-md overflow-hidden lg:max-w-5xl" aria-hidden>
-          <div className="hhd-road absolute inset-x-0 top-[70%] h-[2px]" />
-          <div className="hhd-truck absolute top-0 flex h-full items-center">
-            <div className="hhd-truck-body flex items-center gap-1">
-              <div className="hhd-speed flex w-6 flex-col items-end gap-1">
+          <div className="sd-road absolute inset-x-0 top-[70%] h-[2px]" />
+          <div className="sd-truck absolute top-0 flex h-full items-center">
+            <div className="sd-truck-body flex items-center gap-1">
+              <div className="sd-speed flex w-6 flex-col items-end gap-1">
                 <span className="w-6" />
                 <span className="w-4" />
                 <span className="w-5" />
               </div>
-              <Truck className="h-7 w-7 text-[#FFC20E]" strokeWidth={2.2} />
+              <Truck className="h-7 w-7 text-[var(--b-accent)]" strokeWidth={2.2} />
             </div>
           </div>
         </div>
@@ -447,13 +477,13 @@ export default function HhdStopdesk({ stop, initialLang = "fr" }: { stop: EcoSto
           <div className="contents lg:flex lg:flex-col lg:gap-6">
             {/* ── Price ticket ── */}
             {price !== null && (
-              <section className={`${CARD} hhd-rise relative order-1 overflow-hidden !p-0`} style={delay(380)}>
-                <div className="hhd-shine" aria-hidden />
+              <section className={`${CARD} sd-rise relative order-1 overflow-hidden !p-0`} style={delay(380)}>
+                <div className="sd-shine" aria-hidden />
                 <div className="p-5 pb-4 sm:p-6 sm:pb-5">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2.5">
-                      <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#FFC20E]/20 text-[#A87700] [perspective:400px]">
-                        <Wallet className="hhd-coin h-5 w-5" />
+                      <div className="grid h-10 w-10 place-items-center rounded-xl bg-[var(--b-accent)]/20 text-[var(--b-accent-deep)] [perspective:400px]">
+                        <Wallet className="sd-coin h-5 w-5" />
                       </div>
                       <p className="whitespace-nowrap text-sm font-semibold text-slate-500">{t.amountToPay}</p>
                     </div>
@@ -464,20 +494,20 @@ export default function HhdStopdesk({ stop, initialLang = "fr" }: { stop: EcoSto
                   </div>
                   <div className="mt-4 flex items-end gap-2">
                     <span
-                      className="text-5xl font-extrabold leading-none tracking-tight text-[#0A2F66] tabular-nums sm:text-6xl"
+                      className="text-5xl font-extrabold leading-none tracking-tight text-[var(--b-dark)] tabular-nums sm:text-6xl"
                       dir="ltr"
                     >
                       {formatDA(animatedPrice)}
                     </span>
-                    <span className="mb-1 rounded-lg bg-[#FFC20E] px-2 py-0.5 text-sm font-extrabold text-[#0A2F66]">
+                    <span className="mb-1 rounded-lg bg-[var(--b-accent)] px-2 py-0.5 text-sm font-extrabold text-[var(--b-on-accent)]">
                       {t.currency}
                     </span>
                   </div>
                 </div>
                 {/* perforation with ticket notches */}
                 <div className="relative mx-5 border-t-2 border-dashed border-slate-200 sm:mx-6">
-                  <span className="absolute -start-[31px] -top-[12px] h-[22px] w-[22px] rounded-full bg-[#F2F5FB] sm:-start-[35px]" />
-                  <span className="absolute -end-[31px] -top-[12px] h-[22px] w-[22px] rounded-full bg-[#F2F5FB] sm:-end-[35px]" />
+                  <span className="absolute -start-[31px] -top-[12px] h-[22px] w-[22px] rounded-full bg-[var(--b-page)] sm:-start-[35px]" />
+                  <span className="absolute -end-[31px] -top-[12px] h-[22px] w-[22px] rounded-full bg-[var(--b-page)] sm:-end-[35px]" />
                 </div>
                 <div className="flex items-center gap-2 px-5 py-4 text-sm text-slate-600 sm:px-6">
                   <PackageCheck className="h-4 w-4 shrink-0 text-emerald-600" />
@@ -488,18 +518,18 @@ export default function HhdStopdesk({ stop, initialLang = "fr" }: { stop: EcoSto
 
             {/* ── Sender ── */}
             {(sender || senderPhone) && (
-              <section className={`${CARD} hhd-rise order-2`} style={delay(460)}>
+              <section className={`${CARD} sd-rise order-2`} style={delay(460)}>
                 <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400">
                   <Store className="h-4 w-4" />
                   {t.sender}
                 </div>
                 <div className="mt-3 flex items-center gap-3.5">
                   <div className="relative shrink-0">
-                    <div className="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-[#0F4C9C] to-[#1D63C4] text-lg font-extrabold text-white shadow-lg shadow-[#0F4C9C]/25">
+                    <div className="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-[color:var(--b-primary)] to-[color:var(--b-primary-2)] text-lg font-extrabold text-white shadow-lg shadow-black/15">
                       {initials(sender || t.senderUnknown)}
                     </div>
-                    <span className="absolute -bottom-1 -end-1 grid h-6 w-6 place-items-center rounded-full bg-[#FFC20E] ring-2 ring-white">
-                      <ShieldCheck className="h-3.5 w-3.5 text-[#0A2F66]" />
+                    <span className="absolute -bottom-1 -end-1 grid h-6 w-6 place-items-center rounded-full bg-[var(--b-accent)] ring-2 ring-white">
+                      <ShieldCheck className="h-3.5 w-3.5 text-[var(--b-on-accent)]" />
                     </span>
                   </div>
                   <div className="min-w-0">
@@ -516,7 +546,7 @@ export default function HhdStopdesk({ stop, initialLang = "fr" }: { stop: EcoSto
                   {senderPhone && (
                     <a
                       href={telHref(senderPhone)}
-                      className="hhd-btn hhd-wiggle flex items-center justify-center gap-2 rounded-2xl bg-[#0A2F66] px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-[#0A2F66]/25 only:col-span-2"
+                      className="sd-btn sd-wiggle flex items-center justify-center gap-2 rounded-2xl bg-[var(--b-dark)] px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-black/20 only:col-span-2"
                     >
                       <Phone className="h-4 w-4" />
                       {t.call}
@@ -527,7 +557,7 @@ export default function HhdStopdesk({ stop, initialLang = "fr" }: { stop: EcoSto
                       href={senderWaHref}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="hhd-btn hhd-wiggle flex items-center justify-center gap-2 rounded-2xl bg-[#25D366] px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-[#25D366]/30 only:col-span-2"
+                      className="sd-btn sd-wiggle flex items-center justify-center gap-2 rounded-2xl bg-[#25D366] px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-[#25D366]/30 only:col-span-2"
                     >
                       <MessageCircle className="h-4 w-4" />
                       {t.whatsapp}
@@ -538,14 +568,14 @@ export default function HhdStopdesk({ stop, initialLang = "fr" }: { stop: EcoSto
             )}
 
             {/* ── Pickup point ── */}
-            <section className={`${CARD} hhd-rise order-3`} style={delay(540)}>
+            <section className={`${CARD} sd-rise order-3`} style={delay(540)}>
               <div className="flex items-start gap-3.5">
-                <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#0F4C9C]/10 text-[#0F4C9C]">
+                <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[var(--b-primary)]/10 text-[var(--b-primary)]">
                   <MapPin className="h-6 w-6" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-bold uppercase tracking-wider text-slate-400">{t.pickupPoint}</p>
-                  <h2 className="mt-1 text-lg font-extrabold leading-snug text-[#0A2F66]">{stop.name}</h2>
+                  <h2 className="mt-1 text-lg font-extrabold leading-snug text-[var(--b-dark)]">{stop.name}</h2>
                   <p className="mt-1 text-sm text-slate-600">{stop.adresse || t.addressUnavailable}</p>
                   {wilayaLatin && (
                     <p className="text-sm text-slate-400">
@@ -561,7 +591,7 @@ export default function HhdStopdesk({ stop, initialLang = "fr" }: { stop: EcoSto
                   <a
                     key={p}
                     href={telHref(p)}
-                    className="hhd-btn hhd-wiggle inline-flex items-center gap-2 rounded-xl bg-[#0F4C9C]/[0.08] px-3.5 py-2.5 text-sm font-bold text-[#0F4C9C] hover:bg-[#0F4C9C]/[0.12]"
+                    className="sd-btn sd-wiggle inline-flex items-center gap-2 rounded-xl bg-[var(--b-primary)]/[0.08] px-3.5 py-2.5 text-sm font-bold text-[var(--b-primary)] hover:bg-[var(--b-primary)]/[0.12]"
                   >
                     <Phone className="h-4 w-4" />
                     <span dir="ltr">{p}</span>
@@ -571,7 +601,7 @@ export default function HhdStopdesk({ stop, initialLang = "fr" }: { stop: EcoSto
                   <button
                     type="button"
                     onClick={() => copy("address", fullAddress)}
-                    className="hhd-btn inline-flex items-center gap-2 rounded-xl bg-slate-100 px-3.5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-200/70"
+                    className="sd-btn inline-flex items-center gap-2 rounded-xl bg-slate-100 px-3.5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-200/70"
                   >
                     {copied === "address" ? (
                       <Check className="h-4 w-4 text-emerald-600" />
@@ -585,27 +615,30 @@ export default function HhdStopdesk({ stop, initialLang = "fr" }: { stop: EcoSto
             </section>
 
             {/* ── Instructions ── */}
-            <section className={`${CARD} hhd-rise order-6`} style={delay(780)}>
+            <section className={`${CARD} sd-rise order-6`} style={delay(780)}>
               <h2 className="flex items-center gap-2 font-bold text-slate-900">
-                <Sparkles className="h-4 w-4 text-[#E0A800]" />
+                <Sparkles className="h-4 w-4 text-[var(--b-accent-deep)]" />
                 {t.instructions}
               </h2>
               <ol className="relative mt-5 space-y-5">
                 <span
-                  className="absolute bottom-5 start-5 top-5 w-px bg-gradient-to-b from-[#0F4C9C]/30 via-[#0F4C9C]/15 to-[#FFC20E]/50"
+                  className="absolute bottom-5 start-5 top-5 w-px bg-gradient-to-b from-[color:var(--b-primary)]/30 via-[color:var(--b-primary)]/15 to-[color:var(--b-accent)]/50"
                   aria-hidden
                 />
                 {t.steps.map((s, i) => {
                   const Icon = stepIcons[i];
                   const last = i === t.steps.length - 1;
                   return (
-                    <li key={i} className="hhd-rise relative flex gap-3.5" style={delay(860 + i * 110)}>
+                    <li key={i} className="sd-rise relative flex gap-3.5" style={delay(860 + i * 110)}>
                       <div
-                        className={`relative z-10 grid h-10 w-10 shrink-0 place-items-center rounded-xl shadow-sm ring-1 ${
-                          last ? "bg-[#FFF6DA] text-[#A87700] ring-[#FFC20E]/40" : "bg-white text-[#0F4C9C] ring-slate-200"
+                        className={`relative z-10 grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white shadow-sm ring-1 ${
+                          last
+                            ? "text-[var(--b-accent-deep)] ring-[color:var(--b-accent)]/40"
+                            : "text-[var(--b-primary)] ring-slate-200"
                         }`}
                       >
-                        <Icon className="h-5 w-5" />
+                        {last && <span className="absolute inset-0 rounded-xl bg-[var(--b-accent)]/12" aria-hidden />}
+                        <Icon className="relative h-5 w-5" />
                       </div>
                       <div className="pt-0.5">
                         <p className="font-semibold text-slate-900">{s.title}</p>
@@ -621,10 +654,10 @@ export default function HhdStopdesk({ stop, initialLang = "fr" }: { stop: EcoSto
           {/* Right column */}
           <div className="contents lg:sticky lg:top-6 lg:flex lg:flex-col lg:gap-6">
             {/* ── Opening hours ── */}
-            <section className={`${CARD} hhd-rise order-4`} style={delay(620)}>
+            <section className={`${CARD} sd-rise order-4`} style={delay(620)}>
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#0F4C9C]/10 text-[#0F4C9C]">
+                  <div className="grid h-10 w-10 place-items-center rounded-xl bg-[var(--b-primary)]/10 text-[var(--b-primary)]">
                     <Clock className="h-5 w-5" />
                   </div>
                   <h2 className="font-bold text-slate-900">{t.openingHours}</h2>
@@ -634,7 +667,7 @@ export default function HhdStopdesk({ stop, initialLang = "fr" }: { stop: EcoSto
                 >
                   <span className="relative flex h-2 w-2">
                     {(status.kind === "open" || status.kind === "closing-soon") && (
-                      <span className={`hhd-ping absolute inline-flex h-full w-full rounded-full ${statusUi.dot}`} />
+                      <span className={`sd-ping absolute inline-flex h-full w-full rounded-full ${statusUi.dot}`} />
                     )}
                     <span className={`relative inline-flex h-2 w-2 rounded-full ${statusUi.dot}`} />
                   </span>
@@ -643,14 +676,17 @@ export default function HhdStopdesk({ stop, initialLang = "fr" }: { stop: EcoSto
               </div>
 
               {status.kind !== "unknown" && (
-                <div className="relative mt-4 overflow-hidden rounded-2xl bg-gradient-to-br from-[#0A2F66] to-[#0F4C9C] p-4 text-white">
-                  <div className="hhd-glow absolute -end-10 -top-10 h-28 w-28 rounded-full bg-[#FFC20E]/25 blur-2xl" aria-hidden />
+                <div className="relative mt-4 overflow-hidden rounded-2xl bg-gradient-to-br from-[color:var(--b-dark)] to-[color:var(--b-primary)] p-4 text-white">
+                  <div
+                    className="sd-glow absolute -end-10 -top-10 h-28 w-28 rounded-full bg-[var(--b-accent)]/25 blur-2xl"
+                    aria-hidden
+                  />
                   <p className="relative text-lg font-extrabold">{statusUi.detail}</p>
                   {(status.kind === "open" || status.kind === "closing-soon") && todaySlot && !("closed" in todaySlot) ? (
                     <div className="relative">
                       <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/15">
                         <div
-                          className="hhd-progress h-full rounded-full bg-gradient-to-r from-[#FFD84D] to-[#FFC20E] rtl:bg-gradient-to-l"
+                          className="sd-progress h-full rounded-full bg-gradient-to-r from-[color:var(--b-accent-2)] to-[color:var(--b-accent)] rtl:bg-gradient-to-l"
                           style={{ width: `${Math.max(4, Math.min(100, status.progress * 100))}%` }}
                         />
                       </div>
@@ -673,15 +709,17 @@ export default function HhdStopdesk({ stop, initialLang = "fr" }: { stop: EcoSto
                     return (
                       <li
                         key={i}
-                        className={`hhd-rise flex items-center justify-between rounded-xl px-3 py-2.5 text-sm ${
-                          isToday ? "bg-[#FFC20E]/15 font-bold text-[#0A2F66] ring-1 ring-[#FFC20E]/40" : "text-slate-600"
+                        className={`sd-rise flex items-center justify-between rounded-xl px-3 py-2.5 text-sm ${
+                          isToday
+                            ? "bg-[var(--b-accent)]/15 font-bold text-[var(--b-dark)] ring-1 ring-[color:var(--b-accent)]/40"
+                            : "text-slate-600"
                         }`}
                         style={delay(700 + i * 55)}
                       >
                         <span className="flex items-center gap-2">
                           {t.days[i]}
                           {isToday && (
-                            <span className="rounded-full bg-[#0A2F66] px-2 py-0.5 text-[10px] font-bold text-white">
+                            <span className="rounded-full bg-[var(--b-dark)] px-2 py-0.5 text-[10px] font-bold text-white">
                               {t.today}
                             </span>
                           )}
@@ -703,9 +741,9 @@ export default function HhdStopdesk({ stop, initialLang = "fr" }: { stop: EcoSto
             </section>
 
             {/* ── Map ── */}
-            <section className={`${CARD} hhd-rise order-5 overflow-hidden !p-0`} style={delay(700)}>
+            <section className={`${CARD} sd-rise order-5 overflow-hidden !p-0`} style={delay(700)}>
               <div className="flex items-center gap-2.5 p-5 pb-4 sm:p-6 sm:pb-4">
-                <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#0F4C9C]/10 text-[#0F4C9C]">
+                <div className="grid h-10 w-10 place-items-center rounded-xl bg-[var(--b-primary)]/10 text-[var(--b-primary)]">
                   <MapPinned className="h-5 w-5" />
                 </div>
                 <div className="min-w-0">
@@ -721,13 +759,13 @@ export default function HhdStopdesk({ stop, initialLang = "fr" }: { stop: EcoSto
                 {iframeSrc ? (
                   <>
                     {!mapLoaded && (
-                      <div className="hhd-skeleton absolute inset-0 grid place-items-center">
+                      <div className="sd-skeleton absolute inset-0 grid place-items-center">
                         <BouncingPin />
                       </div>
                     )}
                     <iframe
                       src={iframeSrc}
-                      title={`${t.location} – ${stop.name ?? "HHD Express"}`}
+                      title={`${t.location} – ${stop.name ?? brand.name}`}
                       className={`h-full w-full border-0 transition-opacity duration-700 ${mapLoaded ? "opacity-100" : "opacity-0"}`}
                       loading="lazy"
                       allowFullScreen
@@ -736,12 +774,12 @@ export default function HhdStopdesk({ stop, initialLang = "fr" }: { stop: EcoSto
                     />
                   </>
                 ) : (
-                  <div className="relative grid h-full place-items-center bg-[#EAF0FA]">
+                  <div className="relative grid h-full place-items-center bg-slate-100">
                     <div
                       className="absolute inset-0 opacity-70"
                       style={{
                         backgroundImage:
-                          "linear-gradient(#d6e0f0 2px, transparent 2px), linear-gradient(90deg, #d6e0f0 2px, transparent 2px)",
+                          "linear-gradient(#dde3ea 2px, transparent 2px), linear-gradient(90deg, #dde3ea 2px, transparent 2px)",
                         backgroundSize: "42px 42px",
                       }}
                       aria-hidden
@@ -759,7 +797,7 @@ export default function HhdStopdesk({ stop, initialLang = "fr" }: { stop: EcoSto
                     href={mapsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hhd-btn flex w-full items-center justify-center gap-2 rounded-2xl bg-[#FFC20E] px-4 py-4 text-base font-extrabold text-[#0A2F66] shadow-lg shadow-[#FFC20E]/30 hover:bg-[#FFCB2E]"
+                    className="sd-btn flex w-full items-center justify-center gap-2 rounded-2xl bg-[var(--b-accent)] px-4 py-4 text-base font-extrabold text-[var(--b-on-accent)] shadow-lg shadow-[color:var(--b-accent)]/30"
                   >
                     <Navigation className="h-5 w-5" />
                     {t.openInMaps}
@@ -772,24 +810,24 @@ export default function HhdStopdesk({ stop, initialLang = "fr" }: { stop: EcoSto
       </main>
 
       {/* ═════════════ FOOTER ═════════════ */}
-      <footer className="mt-12 bg-[#0A2F66] pb-28 text-white lg:pb-0">
+      <footer className="mt-12 bg-[var(--b-dark)] pb-28 text-white lg:pb-0">
         <div className="mx-auto flex max-w-md flex-col items-center gap-3 px-4 py-9 text-center lg:max-w-5xl">
-          <div className="rounded-2xl bg-white px-3 py-2">
-            <Image src={HHD_LOGO} alt="HHD Express" width={754} height={360} className="h-8 w-auto" />
-          </div>
-          <p className="text-sm text-white/70">{t.footer}</p>
-          <p className="text-xs text-white/40">© {new Date().getFullYear()} HHD Express</p>
+          <div className="rounded-2xl bg-white px-3 py-2">{logo("h-8 w-auto")}</div>
+          <p className="text-sm text-white/70">{brand.tagline[lang]}</p>
+          <p className="text-xs text-white/40">
+            © {new Date().getFullYear()} {brand.name}
+          </p>
         </div>
       </footer>
 
       {/* ═════════════ MOBILE ACTION DOCK ═════════════ */}
-      <nav className="hhd-dock fixed inset-x-0 bottom-0 z-50 lg:hidden" aria-label="Actions">
+      <nav className="sd-dock fixed inset-x-0 bottom-0 z-50 lg:hidden" aria-label="Actions">
         <div className="mx-auto max-w-md px-3 pb-[max(12px,env(safe-area-inset-bottom))]">
-          <div className="flex items-stretch gap-2 rounded-[22px] bg-white/90 p-2 shadow-[0_-10px_40px_-10px_rgba(10,47,102,0.35)] ring-1 ring-slate-900/5 backdrop-blur-xl">
+          <div className="flex items-stretch gap-2 rounded-[22px] bg-white/90 p-2 shadow-[0_-10px_40px_-10px_rgba(15,23,42,0.35)] ring-1 ring-slate-900/5 backdrop-blur-xl">
             {stopPhones[0] && (
               <a
                 href={telHref(stopPhones[0])}
-                className="hhd-btn flex w-16 shrink-0 flex-col items-center justify-center gap-0.5 rounded-2xl bg-[#0F4C9C]/10 py-2 text-[#0F4C9C]"
+                className="sd-btn flex w-16 shrink-0 flex-col items-center justify-center gap-0.5 rounded-2xl bg-[var(--b-primary)]/10 py-2 text-[var(--b-primary)]"
               >
                 <Phone className="h-5 w-5" />
                 <span className="text-[10px] font-bold">{t.dockStopdesk}</span>
@@ -800,7 +838,7 @@ export default function HhdStopdesk({ stop, initialLang = "fr" }: { stop: EcoSto
                 href={senderWaHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hhd-btn flex w-16 shrink-0 flex-col items-center justify-center gap-0.5 rounded-2xl bg-[#25D366]/15 py-2 text-[#128C4B]"
+                className="sd-btn flex w-16 shrink-0 flex-col items-center justify-center gap-0.5 rounded-2xl bg-[#25D366]/15 py-2 text-[#128C4B]"
               >
                 <MessageCircle className="h-5 w-5" />
                 <span className="text-[10px] font-bold">{t.dockSender}</span>
@@ -811,7 +849,7 @@ export default function HhdStopdesk({ stop, initialLang = "fr" }: { stop: EcoSto
                 href={mapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hhd-btn flex flex-1 items-center justify-center gap-2 rounded-2xl bg-[#0A2F66] px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-[#0A2F66]/30"
+                className="sd-btn flex flex-1 items-center justify-center gap-2 rounded-2xl bg-[var(--b-dark)] px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-black/25"
               >
                 <Navigation className="h-4 w-4" />
                 {t.directions}

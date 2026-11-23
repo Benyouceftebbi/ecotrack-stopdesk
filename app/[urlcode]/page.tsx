@@ -13,13 +13,13 @@ import {
 
 import { db } from "@/lib/firebase"; // modular firestore (server)
 import { findDemoStop } from "@/lib/demoStops";
-import { isHhdCompany } from "@/components/hhd/utils";
+import { getStopdeskBrand } from "@/components/brand-stopdesk/brands";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
 async function getStopdesk(urlcode: string) {
   const demo = findDemoStop(urlcode);
-  if (demo && isHhdCompany(demo.company)) return demo;
+  if (demo && getStopdeskBrand(demo.company)) return demo;
 
   try {
     const dref = doc(db, "EcoStop", urlcode);
@@ -46,7 +46,7 @@ export async function generateMetadata({
   const urlcode = decodeURIComponent(params.urlcode || "").trim();
   const stop = await getStopdesk(urlcode);
 
-  const company = isHhdCompany(stop?.company) ? "HHD Express" : stop?.company || "StopDesk";
+  const company = getStopdeskBrand(stop?.company)?.name ?? (stop?.company || "StopDesk");
   const name = stop?.name || "Point de retrait";
 
   return {

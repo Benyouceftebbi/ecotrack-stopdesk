@@ -1,15 +1,10 @@
 /**
- * Helpers for the HHD Express stopdesk page: company detection, phone
- * normalisation (tel: / WhatsApp), opening-hours parsing and live status.
+ * Helpers for the branded stopdesk page: phone normalisation (tel: / WhatsApp),
+ * opening-hours parsing and live open/closed status.
  */
 
-export const HHD_LOGO = "/images/hhd-logo.png";
-
-/** True for every spelling of HHD Express we store in Firestore ("HHDExpress", "HHD Express", "hhd-express"…). */
-export const isHhdCompany = (company?: string | null): boolean => {
-  const n = (company || "").toLowerCase().replace(/[\s_-]+/g, "");
-  return n === "hhdexpress" || n === "hhd";
-};
+/** French "de Bab Ezzouar" / "d'Oran". */
+export const deFr = (place: string) => (/^[aeiouyhàâäéèêëîïôöùûü]/i.test(place) ? `d'${place}` : `de ${place}`);
 
 /** Accepts a plain embed URL or a full `<iframe src="…">` snippet copied from Google Maps. */
 export const extractIframeSrc = (raw?: string | null): string => {

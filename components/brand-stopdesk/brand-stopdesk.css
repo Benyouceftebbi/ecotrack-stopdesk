@@ -1,0 +1,201 @@
+/* ─────────────────────────────────────────────────────────────
+   Branded stopdesk page — animations & decorative layers.
+   Colours come from CSS variables set per company (see brands.ts).
+   Every class is prefixed `sd-` so nothing leaks into other pages.
+   ───────────────────────────────────────────────────────────── */
+
+.sd-root {
+  background: var(--b-page);
+}
+
+/* ── Entrance: cards rise in one after another (delay via --d) ── */
+.sd-rise {
+  opacity: 0;
+  animation: sd-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0ms) both;
+}
+@keyframes sd-rise {
+  from { opacity: 0; transform: translateY(22px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+
+.sd-pop {
+  animation: sd-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) var(--d, 0ms) both;
+}
+@keyframes sd-pop {
+  from { opacity: 0; transform: scale(0.6); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── Hero background ── */
+.sd-hero {
+  background:
+    radial-gradient(120% 90% at 100% 0%, var(--b-glow-a) 0%, transparent 55%),
+    radial-gradient(90% 80% at 0% 100%, var(--b-glow-b) 0%, transparent 60%),
+    linear-gradient(140deg, var(--b-hero-from) 0%, var(--b-hero-via) 62%, var(--b-hero-to) 100%);
+}
+.sd-dots {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1px);
+  background-size: 18px 18px;
+  mask-image: linear-gradient(180deg, #000 0%, transparent 85%);
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 85%);
+}
+
+/* Swoosh arcs draw themselves on load */
+.sd-arc {
+  stroke-dasharray: 900;
+  stroke-dashoffset: 900;
+  animation: sd-draw 2.2s cubic-bezier(0.65, 0, 0.35, 1) var(--d, 200ms) forwards;
+}
+@keyframes sd-draw { to { stroke-dashoffset: 0; } }
+
+.sd-glow {
+  animation: sd-glow 6s ease-in-out infinite alternate;
+}
+@keyframes sd-glow {
+  from { transform: translate3d(0, 0, 0) scale(1); opacity: 0.55; }
+  to   { transform: translate3d(-18px, 14px, 0) scale(1.15); opacity: 0.85; }
+}
+
+/* Floating parcel in the hero */
+.sd-float {
+  animation: sd-float 4.2s ease-in-out infinite;
+}
+@keyframes sd-float {
+  0%, 100% { transform: translateY(0) rotate(-6deg); }
+  50%      { transform: translateY(-10px) rotate(4deg); }
+}
+
+/* ── Road + truck ── */
+.sd-road {
+  background-image: linear-gradient(90deg, rgba(255, 255, 255, 0.55) 0 50%, transparent 50% 100%);
+  background-size: 28px 2px;
+  background-repeat: repeat-x;
+  background-position: 0 50%;
+  animation: sd-road 0.9s linear infinite;
+}
+@keyframes sd-road { to { background-position: -28px 50%; } }
+[dir="rtl"] .sd-road { animation-name: sd-road-rtl; }
+@keyframes sd-road-rtl { to { background-position: 28px 50%; } }
+
+.sd-truck {
+  animation: sd-drive 9s linear infinite;
+}
+@keyframes sd-drive {
+  0%   { inset-inline-start: -90px; }
+  100% { inset-inline-start: calc(100% + 20px); }
+}
+.sd-truck-body {
+  animation: sd-bump 0.45s ease-in-out infinite alternate;
+}
+[dir="rtl"] .sd-truck-body { transform: scaleX(-1); animation-name: sd-bump-rtl; }
+@keyframes sd-bump { from { transform: translateY(0); } to { transform: translateY(-2px); } }
+@keyframes sd-bump-rtl { from { transform: scaleX(-1) translateY(0); } to { transform: scaleX(-1) translateY(-2px); } }
+
+.sd-speed span {
+  display: block;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--b-accent);
+  animation: sd-speed 0.6s ease-in-out infinite;
+}
+.sd-speed span:nth-child(2) { animation-delay: 0.15s; }
+.sd-speed span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes sd-speed {
+  0%, 100% { opacity: 0.25; transform: scaleX(0.5); }
+  50%      { opacity: 1; transform: scaleX(1); }
+}
+
+/* ── Live status dot ── */
+.sd-ping {
+  animation: sd-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@keyframes sd-ping {
+  75%, 100% { transform: scale(2.4); opacity: 0; }
+}
+
+/* ── Price ticket ── */
+.sd-shine {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.75) 48%, transparent 66%);
+  transform: translateX(-120%);
+  animation: sd-shine 4.5s ease-in-out 1.6s infinite;
+}
+@keyframes sd-shine {
+  0%   { transform: translateX(-120%); }
+  35%  { transform: translateX(120%); }
+  100% { transform: translateX(120%); }
+}
+
+.sd-coin {
+  animation: sd-coin 3s ease-in-out infinite;
+}
+@keyframes sd-coin {
+  0%, 100% { transform: rotateY(0deg); }
+  50%      { transform: rotateY(180deg); }
+}
+
+/* ── Day progress bar ── */
+.sd-progress {
+  transform-origin: left center;
+  animation: sd-grow 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.6s both;
+}
+[dir="rtl"] .sd-progress { transform-origin: right center; }
+@keyframes sd-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* ── Map ── */
+.sd-skeleton {
+  background: linear-gradient(100deg, #e9ecf1 20%, #f6f7f9 40%, #e9ecf1 60%);
+  background-size: 200% 100%;
+  animation: sd-skeleton 1.3s linear infinite;
+}
+@keyframes sd-skeleton { to { background-position: -200% 0; } }
+
+.sd-pin {
+  animation: sd-pin 1.8s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+}
+@keyframes sd-pin {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+.sd-pin-shadow {
+  animation: sd-pin-shadow 1.8s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+}
+@keyframes sd-pin-shadow {
+  0%, 100% { transform: scale(1); opacity: 0.35; }
+  50%      { transform: scale(0.6); opacity: 0.15; }
+}
+
+/* ── Buttons ── */
+.sd-btn {
+  transition: transform 0.18s ease, box-shadow 0.25s ease, background-color 0.25s ease, filter 0.25s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.sd-btn:hover { transform: translateY(-1px); filter: brightness(1.05); }
+.sd-btn:active { transform: scale(0.97); }
+
+.sd-wiggle:hover svg { animation: sd-wiggle 0.5s ease; }
+@keyframes sd-wiggle {
+  0%, 100% { transform: rotate(0); }
+  25%      { transform: rotate(-14deg); }
+  75%      { transform: rotate(14deg); }
+}
+
+/* Mobile action bar slides up */
+.sd-dock {
+  animation: sd-dock 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.9s both;
+}
+@keyframes sd-dock { from { transform: translateY(120%); } to { transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .sd-root *,
+  .sd-root *::before,
+  .sd-root *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 1ms !important;
+  }
+  .sd-truck, .sd-shine { display: none; }
+}
